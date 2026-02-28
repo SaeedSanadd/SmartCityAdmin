@@ -119,7 +119,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className="h-[520px]">
+                <div className="h-130">
                     <CityMap reports={filteredReports} />
                 </div>
             </section>

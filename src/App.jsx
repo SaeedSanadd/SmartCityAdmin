@@ -13,7 +13,7 @@ import AuthProtectedRoute from './Components/AuthProtectedRoute';
 import ReportsPage from './Pages/ReportsPage';
 import ReportDetailsPage from './Pages/ReportDetailsPage';
 import TechnicalsPage from './Pages/TechnicalsPage';
-
+import AdminsPage from "./Pages/AdminsPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -28,6 +28,7 @@ const router = createBrowserRouter([
       { path: "reports", element: <ReportsPage /> },
       { path: "reports/:id", element: <ReportDetailsPage /> },
       { path: "technicals", element: <TechnicalsPage /> },
+      { path: "admins", element: <AdminsPage /> },
     ],
   },
   {

@@ -206,7 +206,7 @@ export default function ReportDetailsPage() {
                             </p>
                         </div>
 
-                        <div className="h-[420px]">
+                        <div className="h-105">
                             <CityMap reports={[report]} />
                         </div>
                     </div>
@@ -268,7 +268,7 @@ export default function ReportDetailsPage() {
             {/* ✅ Lightbox Modal */}
             {openImg && (
                 <div
-                    className="fixed inset-0 z-[99999] bg-black/70 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-99999 bg-black/70 flex items-center justify-center p-4"
                     onClick={() => setOpenImg(null)}
                 >
                     <div
@@ -278,7 +278,7 @@ export default function ReportDetailsPage() {
                         <button
                             type="button"
                             onClick={() => setOpenImg(null)}
-                            className="absolute top-3 right-3 z-[999999] rounded-lg bg-black/50 px-3 py-1.5 text-white hover:bg-black/70"
+                            className="absolute top-3 right-3 z-999999 rounded-lg bg-black/50 px-3 py-1.5 text-white hover:bg-black/70"
                         >
                             ✕
                         </button>

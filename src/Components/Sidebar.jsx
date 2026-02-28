@@ -1,6 +1,5 @@
-import { FaHome, FaUsers, FaCog, FaSignOutAlt, FaHardHat } from "react-icons/fa";
+import { FaHome, FaUsers, FaCog, FaSignOutAlt, FaHardHat, FaUserShield } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
-
 export default function Sidebar({ logout }) {
     function handleLogout() {
         // ✅ لو مش عايز confirm امسح 3 سطور دول
@@ -28,6 +27,7 @@ export default function Sidebar({ logout }) {
                 <SideLink to="/" icon={<FaHome />} label="Dashboard" end />
                 <SideLink to="/reports" icon={<FaUsers />} label="Reports" />
                 <SideLink to="/technicals" icon={<FaHardHat />} label="Technicals" />
+                <SideLink to="/admins" icon={<FaUserShield />} label="Admins" />
                 <SideLink to="/settings" icon={<FaCog />} label="Settings" />
             </nav>
 
