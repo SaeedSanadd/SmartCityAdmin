@@ -26,6 +26,7 @@ const router = createBrowserRouter([
       { path: "map", element: <ReportMap /> },
       { path: "reports", element: <ReportsPage /> },
       { path: "reports/:id", element: <ReportDetailsPage /> },
+      { path: "technicals", element: <TechnicalsPage /> },
     ],
   },
   {

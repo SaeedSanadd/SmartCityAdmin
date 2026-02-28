@@ -27,6 +27,7 @@ export default function Sidebar({ logout }) {
             <nav className="flex flex-col grow p-2 space-y-1">
                 <SideLink to="/" icon={<FaHome />} label="Dashboard" end />
                 <SideLink to="/reports" icon={<FaUsers />} label="Reports" />
+                <SideLink to="/technicals" icon={<FaHardHat />} label="Technicals" />
                 <SideLink to="/settings" icon={<FaCog />} label="Settings" />
             </nav>
 
