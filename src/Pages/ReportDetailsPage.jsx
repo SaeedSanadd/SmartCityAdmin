@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import CityMap from "../components/CityMap";
+import CityMap from "../Components/CityMap";
 
 export default function ReportDetailsPage() {
     const { id } = useParams();

@@ -7,8 +7,8 @@ import {
     FaHardHat,
 } from "react-icons/fa";
 
-import CityMap from "../components/CityMap";
-import StatCard from "../components/StatCard";
+import CityMap from "../Components/CityMap";
+import StatCard from "../Components/StatCard";
 
 export default function Dashboard() {
     // Filters
