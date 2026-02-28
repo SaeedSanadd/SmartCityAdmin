@@ -2,27 +2,21 @@ import { useMemo, useState } from "react";
 
 export default function AdminsPage() {
     const [q, setQ] = useState("");
-    const [roleFilter, setRoleFilter] = useState("All");
 
     const [admins, setAdmins] = useState(() => [
-        { id: "a1", name: "Saeed Sanad", email: "saeedsanadd@gmail.com", role: "Super Admin", status: "Active" },
-        { id: "a2", name: "Ahmed Hassan", email: "ahmed@gmail.com", role: "Admin", status: "Active" },
-        { id: "a3", name: "Mona Ali", email: "mona@gmail.com", role: "Admin", status: "Inactive" },
+        { id: "a1", name: "Saeed Sanad", email: "saeedsanadd@gmail.com", status: "Active" },
+        { id: "a2", name: "Ahmed Hassan", email: "ahmed@gmail.com", status: "Active" },
+        { id: "a3", name: "Mona Ali", email: "mona@gmail.com", status: "Inactive" },
     ]);
 
     const [open, setOpen] = useState(false);
-    const [newAdmin, setNewAdmin] = useState({ name: "", email: "", role: "Admin" });
+    const [newAdmin, setNewAdmin] = useState({ name: "", email: "" });
 
     const filtered = useMemo(() => {
-        return admins.filter((a) => {
-            const matchQ =
-                q.trim() === "" ||
-                `${a.name} ${a.email}`.toLowerCase().includes(q.toLowerCase());
-
-            const matchRole = roleFilter === "All" ? true : a.role === roleFilter;
-            return matchQ && matchRole;
-        });
-    }, [admins, q, roleFilter]);
+        return admins.filter((a) =>
+            `${a.name} ${a.email}`.toLowerCase().includes(q.toLowerCase())
+        );
+    }, [admins, q]);
 
     function addAdmin(e) {
         e.preventDefault();
@@ -34,13 +28,12 @@ export default function AdminsPage() {
                 id: `a${Date.now()}`,
                 name: newAdmin.name.trim(),
                 email: newAdmin.email.trim(),
-                role: newAdmin.role,
                 status: "Active",
             },
             ...prev,
         ]);
 
-        setNewAdmin({ name: "", email: "", role: "Admin" });
+        setNewAdmin({ name: "", email: "" });
         setOpen(false);
     }
 
@@ -58,17 +51,12 @@ export default function AdminsPage() {
         );
     }
 
-    function changeRole(id, role) {
-        setAdmins((prev) => prev.map((a) => (a.id === id ? { ...a, role } : a)));
-    }
-
     return (
         <div className="space-y-5">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Admins</h1>
-                    <p className="text-sm text-slate-500">Manage admin accounts and roles.</p>
+                    <p className="text-sm text-slate-500">Manage admin accounts.</p>
                 </div>
 
                 <button
@@ -79,33 +67,18 @@ export default function AdminsPage() {
                 </button>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-2">
-                <input
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Search by name or email"
-                    className="w-full md:w-80 rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                />
+            <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search by name or email"
+                className="w-full md:w-80 rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+            />
 
-                <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                    className="rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                >
-                    <option value="All">All Roles</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Super Admin">Super Admin</option>
-                </select>
-            </div>
-
-            {/* Table */}
             <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
                 <div className="grid grid-cols-12 border-b bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
                     <div className="col-span-4">Admin</div>
-                    <div className="col-span-3">Email</div>
-                    <div className="col-span-2">Role</div>
-                    <div className="col-span-1">Status</div>
+                    <div className="col-span-4">Email</div>
+                    <div className="col-span-2">Status</div>
                     <div className="col-span-2 text-right">Actions</div>
                 </div>
 
@@ -119,21 +92,12 @@ export default function AdminsPage() {
                                 <p className="text-xs text-slate-500">ID: {a.id}</p>
                             </div>
 
-                            <div className="col-span-3 text-sm text-slate-700">{a.email}</div>
+                            <div className="col-span-4 text-sm text-slate-700">{a.email}</div>
 
                             <div className="col-span-2">
-                                <select
-                                    value={a.role}
-                                    onChange={(e) => changeRole(a.id, e.target.value)}
-                                    className="rounded-xl border bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                >
-                                    <option value="Admin">Admin</option>
-                                    <option value="Super Admin">Super Admin</option>
-                                </select>
-                            </div>
-
-                            <div className="col-span-1">
-                                <Badge tone={a.status === "Active" ? "success" : "neutral"}>{a.status}</Badge>
+                                <Badge tone={a.status === "Active" ? "success" : "neutral"}>
+                                    {a.status}
+                                </Badge>
                             </div>
 
                             <div className="col-span-2 flex justify-end gap-2">
@@ -156,7 +120,6 @@ export default function AdminsPage() {
                 )}
             </div>
 
-            {/* Modal */}
             {open && (
                 <div
                     className="fixed inset-0 z-[99999] bg-black/60 flex items-center justify-center p-4"
@@ -166,48 +129,22 @@ export default function AdminsPage() {
                         className="w-full max-w-md rounded-2xl bg-white border shadow-lg p-5"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900">Add Admin</h2>
-                                <p className="text-xs text-slate-500">Create a new admin account (mock).</p>
-                            </div>
-                            <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-900">
-                                ✕
-                            </button>
-                        </div>
+                        <h2 className="text-lg font-bold text-slate-900">Add Admin</h2>
 
                         <form onSubmit={addAdmin} className="mt-4 space-y-3">
-                            <div>
-                                <label className="text-xs text-slate-500">Name</label>
-                                <input
-                                    value={newAdmin.name}
-                                    onChange={(e) => setNewAdmin((p) => ({ ...p, name: e.target.value }))}
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="Admin name"
-                                />
-                            </div>
+                            <input
+                                value={newAdmin.name}
+                                onChange={(e) => setNewAdmin((p) => ({ ...p, name: e.target.value }))}
+                                placeholder="Name"
+                                className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                            />
 
-                            <div>
-                                <label className="text-xs text-slate-500">Email</label>
-                                <input
-                                    value={newAdmin.email}
-                                    onChange={(e) => setNewAdmin((p) => ({ ...p, email: e.target.value }))}
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="admin@email.com"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-xs text-slate-500">Role</label>
-                                <select
-                                    value={newAdmin.role}
-                                    onChange={(e) => setNewAdmin((p) => ({ ...p, role: e.target.value }))}
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                >
-                                    <option value="Admin">Admin</option>
-                                    <option value="Super Admin">Super Admin</option>
-                                </select>
-                            </div>
+                            <input
+                                value={newAdmin.email}
+                                onChange={(e) => setNewAdmin((p) => ({ ...p, email: e.target.value }))}
+                                placeholder="Email"
+                                className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                            />
 
                             <button
                                 type="submit"
