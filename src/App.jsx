@@ -12,6 +12,7 @@ import ProtectedRoute from './Components/ProtectedRoute';
 import AuthProtectedRoute from './Components/AuthProtectedRoute';
 import ReportsPage from './Pages/ReportsPage';
 import ReportDetailsPage from './Pages/ReportDetailsPage';
+import TechnicalsPage from './Pages/TechnicalsPage';
 
 const router = createBrowserRouter([
   {
