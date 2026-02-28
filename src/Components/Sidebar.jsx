@@ -1,4 +1,4 @@
-import { FaHome, FaUsers, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaUsers, FaCog, FaSignOutAlt, FaHardHat } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar({ logout }) {
