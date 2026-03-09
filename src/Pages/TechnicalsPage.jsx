@@ -162,7 +162,7 @@ export default function TechnicalsPage() {
             {/* ✅ Modal Add */}
             {open && (
                 <div
-                    className="fixed inset-0 z-[99999] bg-black/60 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-99999 bg-black/60 flex items-center justify-center p-4"
                     onClick={() => setOpen(false)}
                 >
                     <div

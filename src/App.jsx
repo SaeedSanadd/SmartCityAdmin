@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import MainLayout from './Layouts/MainLayout';
 import AuthLayout from './Layouts/AuthLayout';
 import LoginPage from './Pages/LoginPage';
 import DashboardPage from './Pages/DashboardPage';
-import ResetPasswordPage from './Pages/ResetPasswordPage';
 import NotFoundPage from './Pages/NotFoundPage';
 import ReportMap from './Components/ٌReportMap';
 import { HeroUIProvider } from '@heroui/react';
@@ -14,6 +12,8 @@ import ReportsPage from './Pages/ReportsPage';
 import ReportDetailsPage from './Pages/ReportDetailsPage';
 import TechnicalsPage from './Pages/TechnicalsPage';
 import AdminsPage from "./Pages/AdminsPage";
+import SettingsPage from './Pages/SettingsPage';
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -29,6 +29,7 @@ const router = createBrowserRouter([
       { path: "reports/:id", element: <ReportDetailsPage /> },
       { path: "technicals", element: <TechnicalsPage /> },
       { path: "admins", element: <AdminsPage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
   {
@@ -43,7 +44,6 @@ const router = createBrowserRouter([
           </AuthProtectedRoute>
         ),
       },
-      // { path: "reset-password", element: <ResetPasswordPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },

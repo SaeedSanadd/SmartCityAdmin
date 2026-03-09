@@ -1,75 +1,73 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 export default function ReportsPage() {
     const navigate = useNavigate();
+
+    const [reports, setReports] = useState([]);
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
     const [priority, setPriority] = useState("All");
 
-    // 🔸 Mock Data (استبدلها بـ API later)
-    const reports = useMemo(
-        () => [
-            {
-                id: "1",
-                title: "Garbage Overflow",
-                category: "Garbage",
-                status: "New",
-                priority: "High",
-                city: "Cairo",
-                street: "Tahrir St",
-                createdAt: "2026-02-28 12:30",
-            },
-            {
-                id: "2",
-                title: "Road Pothole",
-                category: "Road",
-                status: "In Progress",
-                priority: "Medium",
-                city: "Giza",
-                street: "Haram St",
-                createdAt: "2026-02-28 13:10",
-            },
-            {
-                id: "3",
-                title: "Bin Sensor Alert",
-                category: "IoT",
-                status: "Completed",
-                priority: "Low",
-                city: "Cairo",
-                street: "Nasr City",
-                createdAt: "2026-02-28 14:05",
-            },
-        ],
-        []
-    );
+    // 🔥 Real-time Firestore
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, "reports"), (snapshot) => {
+            const data = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setReports(data);
+        });
 
+        return () => unsubscribe();
+    }, []);
+
+    // 🔥 Filtering
     const filtered = useMemo(() => {
         return reports.filter((r) => {
             const matchQ =
                 q.trim() === "" ||
-                `${r.title} ${r.city} ${r.street} ${r.category}`.toLowerCase().includes(q.toLowerCase());
+                `${r.type ?? ""} ${r.city ?? ""} ${r.address ?? ""} ${r.notes ?? ""}`
+                    .toLowerCase()
+                    .includes(q.toLowerCase());
 
-            const matchStatus = status === "All" ? true : r.status === status;
-            const matchPriority = priority === "All" ? true : r.priority === priority;
+            const matchStatus =
+                status === "All" ? true : r.status === status;
+
+            const matchPriority =
+                priority === "All" ? true : r.priority === priority;
 
             return matchQ && matchStatus && matchPriority;
         });
     }, [reports, q, status, priority]);
 
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "";
+        try {
+            return timestamp.toDate().toLocaleString();
+        } catch {
+            return "";
+        }
+    };
+
     return (
         <div className="space-y-5">
+            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
-                    <p className="text-sm text-slate-500">Manage incoming reports and assign workers.</p>
+                    <p className="text-sm text-slate-500">
+                        Manage incoming reports and assign workers.
+                    </p>
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
                     <input
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        placeholder="Search (title, city, street...)"
+                        placeholder="Search (type, city, address...)"
                         className="w-full md:w-72 rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     />
 
@@ -79,9 +77,9 @@ export default function ReportsPage() {
                         className="rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     >
                         <option value="All">All Status</option>
-                        <option value="New">New</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
                     </select>
 
                     <select
@@ -97,6 +95,7 @@ export default function ReportsPage() {
                 </div>
             </div>
 
+            {/* Table */}
             <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
                 <div className="grid grid-cols-12 border-b bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
                     <div className="col-span-5">Report</div>
@@ -106,7 +105,9 @@ export default function ReportsPage() {
                 </div>
 
                 {filtered.length === 0 ? (
-                    <div className="p-6 text-sm text-slate-500">No reports found.</div>
+                    <div className="p-6 text-sm text-slate-500">
+                        No reports found.
+                    </div>
                 ) : (
                     filtered.map((r) => (
                         <button
@@ -115,27 +116,41 @@ export default function ReportsPage() {
                             className="w-full text-left grid grid-cols-12 px-4 py-4 border-b hover:bg-slate-50 transition"
                         >
                             <div className="col-span-5">
-                                <p className="font-semibold text-slate-900">{r.title}</p>
-                                <p className="text-xs text-slate-500">{r.category}</p>
+                                <p className="font-semibold text-slate-900">
+                                    {r.type}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    {r.city}
+                                </p>
                             </div>
 
                             <div className="col-span-2">
-                                <Badge tone={r.status === "Completed" ? "success" : r.status === "In Progress" ? "info" : "warn"}>
+                                <Badge tone={statusTone(r.status)}>
                                     {r.status}
                                 </Badge>
                             </div>
 
                             <div className="col-span-2">
-                                <Badge tone={r.priority === "High" ? "danger" : r.priority === "Medium" ? "warn" : "neutral"}>
-                                    {r.priority}
+                                <Badge
+                                    tone={
+                                        r.priority === "High"
+                                            ? "danger"
+                                            : r.priority === "Medium"
+                                                ? "warn"
+                                                : "neutral"
+                                    }
+                                >
+                                    {r.priority ?? "—"}
                                 </Badge>
                             </div>
 
                             <div className="col-span-3">
                                 <p className="text-sm text-slate-700">
-                                    {r.city}, {r.street}
+                                    {r.address}
                                 </p>
-                                <p className="text-xs text-slate-500">{r.createdAt}</p>
+                                <p className="text-xs text-slate-500">
+                                    {formatDate(r.createdAt)}
+                                </p>
                             </div>
                         </button>
                     ))
@@ -143,6 +158,12 @@ export default function ReportsPage() {
             </div>
         </div>
     );
+}
+
+function statusTone(status) {
+    if (status === "resolved") return "success";
+    if (status === "in_progress") return "info";
+    return "danger"; // pending
 }
 
 function Badge({ children, tone = "neutral" }) {
@@ -157,5 +178,11 @@ function Badge({ children, tone = "neutral" }) {
                         ? "bg-amber-50 text-amber-700 border-amber-200"
                         : "bg-slate-50 text-slate-700 border-slate-200";
 
-    return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs ${cls}`}>{children}</span>;
+    return (
+        <span
+            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs ${cls}`}
+        >
+            {children}
+        </span>
+    );
 }
