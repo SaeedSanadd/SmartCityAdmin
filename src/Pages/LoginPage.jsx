@@ -5,29 +5,22 @@ import React, { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
-import { sendLoginData } from "../Services/login";
 import { AuthContext } from "../Context/AuthContext";
 
+import { auth, db } from "../firebase/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore"; // ✅ بس ده
+
 const schema = zod.object({
-    email: zod
-        .string()
-        .nonempty("Email is required")
-        .regex(
-            /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-            "Please enter a valid email address"
-        ),
-    password: zod
-        .string()
-        .nonempty("Password is required")
-        .regex(
-            /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/,
-            "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number"
-        ),
+    email: zod.string().nonempty("Email is required"),
+    password: zod.string().nonempty("Password is required"),
 });
 
 export default function LoginPage() {
+
     const [apiError, setApiError] = useState(null);
     const [loading, setLoading] = useState(false);
+
     const { setIsLoggedIn } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -45,27 +38,47 @@ export default function LoginPage() {
     });
 
     async function signIn(values) {
+
         setApiError(null);
         setLoading(true);
-        console.log("VALUES:", values);
+
         try {
-            const result = await sendLoginData(values);
-            console.log("RESULT:", result);
-            if (result?.error) {
-                setApiError(result.error);
+            // 🔐 تسجيل الدخول
+            const userCredential = await signInWithEmailAndPassword(
+                auth,
+                values.email,
+                values.password
+            );
+
+            const user = userCredential.user;
+
+            // ✅ check admin بالـ UID
+            const docRef = doc(db, "admins", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                setApiError("You are not authorized as an admin");
                 return;
             }
 
-            const token = result?.data?.token;
-            if (!token) {
-                setApiError("Token not found");
-                return;
-            }
-
-            localStorage.setItem("token", token);
+            // ✅ نجاح
+            localStorage.setItem("adminUid", user.uid);
             setIsLoggedIn(true);
 
-            navigate("/", { replace: true }); // ✅ لأن الداشبورد عندك index على "/"
+            navigate("/", { replace: true });
+
+        } catch (error) {
+
+            if (error.code === "auth/user-not-found") {
+                setApiError("User not found");
+            } else if (error.code === "auth/wrong-password") {
+                setApiError("Wrong password");
+            } else if (error.code === "auth/invalid-credential") {
+                setApiError("Invalid email or password");
+            } else {
+                setApiError(error.message);
+            }
+
         } finally {
             setLoading(false);
         }
@@ -87,35 +100,37 @@ export default function LoginPage() {
                     <p className="text-gray-500 text-sm">Admin Login Panel</p>
                 </div>
 
-                {/* ✅ هنا التعديل المهم */}
                 <form onSubmit={handleSubmit(signIn)} className="space-y-5">
-                    {/* Email */}
+
                     <div className="relative">
                         <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
+
                         <input
                             type="email"
                             placeholder="Admin Email"
-                            autoComplete="off"
-                            className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition
-                ${errors.email ? "border-red-400 focus:ring-red-400" : "focus:ring-blue-500"}`}
+                            className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2
+                            ${errors.email ? "border-red-400" : "focus:ring-blue-500"}`}
                             {...register("email")}
                         />
+
                         {errors.email && (
-                            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                            <p className="mt-1 text-sm text-red-600">
+                                {errors.email.message}
+                            </p>
                         )}
                     </div>
 
-                    {/* Password */}
                     <div className="relative">
                         <FaLock className="absolute top-3 left-3 text-gray-400" />
+
                         <input
                             type="password"
                             placeholder="Password"
-                            autoComplete="new-password"
-                            className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition
-                ${errors.password ? "border-red-400 focus:ring-red-400" : "focus:ring-blue-500"}`}
+                            className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2
+                            ${errors.password ? "border-red-400" : "focus:ring-blue-500"}`}
                             {...register("password")}
                         />
+
                         {errors.password && (
                             <p className="mt-1 text-sm text-red-600">
                                 {errors.password.message}
@@ -123,18 +138,16 @@ export default function LoginPage() {
                         )}
                     </div>
 
-                    {/* API Error */}
                     {apiError && (
                         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                             {apiError}
                         </div>
                     )}
 
-                    {/* Button */}
                     <button
                         type="submit"
                         disabled={loading || isSubmitting}
-                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white py-2 rounded-lg font-semibold transition"
+                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-2 rounded-lg font-semibold"
                     >
                         {loading ? "Logging in..." : "Login"}
                     </button>
@@ -145,11 +158,54 @@ export default function LoginPage() {
                         </Link>
                     </p>
 
-                    <p className="text-center text-sm text-gray-500 mt-4 select-none">
+                    <p className="text-center text-sm text-gray-500 mt-4">
                         © 2026 Smart City System
                     </p>
+
                 </form>
             </div>
         </div>
     );
+}
+
+
+
+
+async function addAdmin(e) {
+    e.preventDefault();
+
+    if (!newAdmin.name || !newAdmin.email || !newAdmin.password) return;
+
+    try {
+        // 🔐 create in Authentication
+        const userCred = await createUserWithEmailAndPassword(
+            auth,
+            newAdmin.email,
+            newAdmin.password
+        );
+
+        const user = userCred.user;
+
+        // ✅ هنا الحل الصح
+        await setDoc(doc(db, "admins", user.uid), {
+            uid: user.uid,
+            name: newAdmin.name,
+            email: newAdmin.email,
+            role: "admin",
+        });
+
+        // ⚠️ علشان ماتخرجش من الأدمن
+        await signOut(auth);
+
+        setNewAdmin({
+            name: "",
+            email: "",
+            password: "",
+        });
+
+        setOpen(false);
+
+    } catch (error) {
+        alert(error.message);
+    }
 }

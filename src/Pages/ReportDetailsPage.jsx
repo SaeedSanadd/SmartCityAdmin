@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
-import toast from "react-hot-toast"; // ✅
+import toast from "react-hot-toast";
 
 export default function ReportDetailsPage() {
     const { id } = useParams();
@@ -23,7 +23,7 @@ export default function ReportDetailsPage() {
 
     const [selectedWorker, setSelectedWorker] = useState("");
     const [status, setStatus] = useState("");
-
+    const [selectedImage, setSelectedImage] = useState(null);
     useEffect(() => {
         async function fetchReport() {
             const docRef = doc(db, "reports", id);
@@ -174,12 +174,52 @@ export default function ReportDetailsPage() {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-4">
+                    {/* 🗺️ MAP */}
                     <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
                         <div className="h-96">
                             <CityMap reports={[report]} />
                         </div>
                     </div>
+
+                    {/* 🖼️ IMAGES تحت الماب */}
+                    {report.images && report.images.length > 0 && (
+                        <div className="rounded-2xl border bg-white shadow-sm p-4">
+                            <h3 className="font-semibold mb-3">Report Images</h3>
+
+                            <div className="flex gap-3 flex-wrap">
+                                {report.images.map((img, index) => (
+                                    <img
+                                        key={index}
+                                        src={img}
+                                        alt="report"
+                                        onClick={() => setSelectedImage(img)}
+                                        className="w-40 h-40 object-cover rounded-xl border cursor-pointer hover:scale-105 transition"
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {selectedImage && (
+                        <div
+                            className="fixed inset-0 bg-black/80 flex items-center justify-center z-9999"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <img
+                                src={selectedImage}
+                                alt="preview"
+                                className="max-w-[90%] max-h-[90%] rounded-xl shadow-lg"
+                            />
+
+                            {/* زرار قفل */}
+                            <button
+                                onClick={() => setSelectedImage(null)}
+                                className="absolute top-5 right-5 text-white text-2xl font-bold"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

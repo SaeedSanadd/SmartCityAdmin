@@ -1,74 +1,135 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    collection,
+    onSnapshot,
+    query,
+    where,
+    addDoc,
+    deleteDoc,
+    doc,
+} from "firebase/firestore";
+import { db } from "../firebase/firebase";
+
+import {
+    createUserWithEmailAndPassword,
+    signOut
+} from "firebase/auth";
+import { auth } from "../firebase/firebase";
 
 export default function TechnicalsPage() {
     const navigate = useNavigate();
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
 
-    // ✅ بدل useMemo -> useState علشان نقدر نضيف/نمسح
-    const [workers, setWorkers] = useState(() => [
-        { id: "w1", name: "Ahmed Hassan", phone: "01000000001", status: "Available", tasks: 0, area: "Cairo" },
-        { id: "w2", name: "Mona Ali", phone: "01000000002", status: "Active", tasks: 3, area: "Giza" },
-        { id: "w3", name: "Omar Said", phone: "01000000003", status: "Available", tasks: 1, area: "Cairo" },
-        { id: "w4", name: "Salma Adel", phone: "01000000004", status: "Offline", tasks: 0, area: "Damietta" },
-    ]);
+    const [workers, setWorkers] = useState([]);
 
-    // Modal add
+    // 🔥 Firebase GET
+    useEffect(() => {
+        const qRef = query(
+            collection(db, "users"),
+            where("role", "==", "technical")
+        );
+
+        const unsubscribe = onSnapshot(qRef, (snapshot) => {
+            const data = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setWorkers(data);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // 🔍 FILTER
+    const filtered = useMemo(() => {
+        return workers.filter((w) => {
+            const matchQ =
+                q.trim() === "" ||
+                `${w.name} ${w.phone} ${w.area}`
+                    .toLowerCase()
+                    .includes(q.toLowerCase());
+
+            const matchStatus =
+                status === "All" ? true : w.status === status;
+
+            return matchQ && matchStatus;
+        });
+    }, [workers, q, status]);
+
+    // Modal
     const [open, setOpen] = useState(false);
     const [newWorker, setNewWorker] = useState({
         name: "",
         phone: "",
         area: "",
         status: "Available",
+        email: "",
+        password: "",
     });
 
-    const filtered = useMemo(() => {
-        return workers.filter((w) => {
-            const matchQ =
-                q.trim() === "" ||
-                `${w.name} ${w.phone} ${w.area}`.toLowerCase().includes(q.toLowerCase());
-
-            const matchStatus = status === "All" ? true : w.status === status;
-            return matchQ && matchStatus;
-        });
-    }, [workers, q, status]);
-
-    function addWorker(e) {
+    // ➕ ADD (Firebase)
+    async function addWorker(e) {
         e.preventDefault();
 
-        if (!newWorker.name.trim() || !newWorker.phone.trim() || !newWorker.area.trim()) return;
+        if (!newWorker.name || !newWorker.phone || !newWorker.area || !newWorker.email || !newWorker.password) return;
 
-        const id = `w${Date.now()}`;
-        setWorkers((prev) => [
-            {
-                id,
-                name: newWorker.name.trim(),
-                phone: newWorker.phone.trim(),
-                area: newWorker.area.trim(),
+        try {
+            const userCred = await createUserWithEmailAndPassword(
+                auth,
+                newWorker.email,
+                newWorker.password
+            );
+
+            const user = userCred.user;
+
+            await addDoc(collection(db, "users"), {
+                uid: user.uid,
+                name: newWorker.name,
+                phone: newWorker.phone,
+                area: newWorker.area,
                 status: newWorker.status,
                 tasks: 0,
-            },
-            ...prev,
-        ]);
+                role: "technical",
+                email: newWorker.email,
+            });
 
-        setNewWorker({ name: "", phone: "", area: "", status: "Available" });
-        setOpen(false);
+            await signOut(auth);
+
+            setNewWorker({
+                name: "",
+                phone: "",
+                area: "",
+                status: "Available",
+                email: "",
+                password: "",
+            });
+
+            setOpen(false);
+
+        } catch (err) {
+            alert(err.message);
+        }
     }
 
-    function deleteWorker(id) {
+    // ❌ DELETE (Firebase)
+    async function deleteWorker(id) {
         const ok = confirm("Delete this technical worker?");
         if (!ok) return;
-        setWorkers((prev) => prev.filter((w) => w.id !== id));
+        await deleteDoc(doc(db, "users", id));
     }
 
     return (
         <div className="space-y-5">
+
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Technicals</h1>
-                    <p className="text-sm text-slate-500">Manage technical workers and their workload.</p>
+                    <p className="text-sm text-slate-500">
+                        Manage technical workers and their workload.
+                    </p>
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
@@ -116,7 +177,6 @@ export default function TechnicalsPage() {
                     filtered.map((w) => (
                         <button
                             key={w.id}
-                            onClick={() => navigate(`/technicals/${w.id}`)}
                             className="w-full text-left grid grid-cols-12 px-4 py-4 border-b hover:bg-slate-50 transition items-center"
                         >
                             <div className="col-span-4">
@@ -146,7 +206,7 @@ export default function TechnicalsPage() {
                                 <button
                                     type="button"
                                     onClick={(e) => {
-                                        e.stopPropagation(); // ✅ عشان مايفتحش details
+                                        e.stopPropagation();
                                         deleteWorker(w.id);
                                     }}
                                     className="rounded-xl border border-red-200 bg-red-50 text-red-700 px-3 py-1.5 text-xs hover:bg-red-100"
@@ -159,32 +219,45 @@ export default function TechnicalsPage() {
                 )}
             </div>
 
-            {/* ✅ Modal Add */}
+            {/* Modal */}
             {open && (
                 <div
-                    className="fixed inset-0 z-99999 bg-black/60 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4"
                     onClick={() => setOpen(false)}
                 >
                     <div
-                        className="w-full max-w-md rounded-2xl bg-white border shadow-lg p-5"
+                        className="w-full max-w-md rounded-2xl bg-white border shadow-lg p-5 animate-in fade-in zoom-in-95"
                         onClick={(e) => e.stopPropagation()}
                     >
+                        {/* Header */}
                         <div className="flex items-start justify-between">
                             <div>
-                                <h2 className="text-lg font-bold text-slate-900">Add Technical</h2>
-                                <p className="text-xs text-slate-500">Create a new worker (mock).</p>
+                                <h2 className="text-lg font-bold text-slate-900">
+                                    Add Technical
+                                </h2>
+                                <p className="text-xs text-slate-500">
+                                    Create a new worker
+                                </p>
                             </div>
-                            <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-900">
+
+                            <button
+                                onClick={() => setOpen(false)}
+                                className="text-slate-400 hover:text-slate-900 transition"
+                            >
                                 ✕
                             </button>
                         </div>
 
+                        {/* Form */}
                         <form onSubmit={addWorker} className="mt-4 space-y-3">
+
                             <div>
                                 <label className="text-xs text-slate-500">Name</label>
                                 <input
                                     value={newWorker.name}
-                                    onChange={(e) => setNewWorker((p) => ({ ...p, name: e.target.value }))}
+                                    onChange={(e) =>
+                                        setNewWorker((p) => ({ ...p, name: e.target.value }))
+                                    }
                                     className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                                     placeholder="Worker name"
                                 />
@@ -194,7 +267,9 @@ export default function TechnicalsPage() {
                                 <label className="text-xs text-slate-500">Phone</label>
                                 <input
                                     value={newWorker.phone}
-                                    onChange={(e) => setNewWorker((p) => ({ ...p, phone: e.target.value }))}
+                                    onChange={(e) =>
+                                        setNewWorker((p) => ({ ...p, phone: e.target.value }))
+                                    }
                                     className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                                     placeholder="010xxxxxxxx"
                                 />
@@ -204,9 +279,36 @@ export default function TechnicalsPage() {
                                 <label className="text-xs text-slate-500">Area</label>
                                 <input
                                     value={newWorker.area}
-                                    onChange={(e) => setNewWorker((p) => ({ ...p, area: e.target.value }))}
+                                    onChange={(e) =>
+                                        setNewWorker((p) => ({ ...p, area: e.target.value }))
+                                    }
                                     className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                                     placeholder="Cairo / Giza ..."
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-slate-500">Email</label>
+                                <input
+                                    value={newWorker.email}
+                                    onChange={(e) =>
+                                        setNewWorker((p) => ({ ...p, email: e.target.value }))
+                                    }
+                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                                    placeholder="email@example.com"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-slate-500">Password</label>
+                                <input
+                                    type="password"
+                                    value={newWorker.password}
+                                    onChange={(e) =>
+                                        setNewWorker((p) => ({ ...p, password: e.target.value }))
+                                    }
+                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                                    placeholder="••••••••"
                                 />
                             </div>
 
@@ -214,7 +316,9 @@ export default function TechnicalsPage() {
                                 <label className="text-xs text-slate-500">Status</label>
                                 <select
                                     value={newWorker.status}
-                                    onChange={(e) => setNewWorker((p) => ({ ...p, status: e.target.value }))}
+                                    onChange={(e) =>
+                                        setNewWorker((p) => ({ ...p, status: e.target.value }))
+                                    }
                                     className="mt-1 w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                                 >
                                     <option value="Available">Available</option>
@@ -225,7 +329,7 @@ export default function TechnicalsPage() {
 
                             <button
                                 type="submit"
-                                className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2 text-sm font-semibold"
+                                className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2 text-sm font-semibold transition"
                             >
                                 Add
                             </button>

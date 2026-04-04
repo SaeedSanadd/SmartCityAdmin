@@ -8,7 +8,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
+import { useNavigate  } from "react-router-dom";
 // 🔥 Fix default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -62,7 +62,7 @@ export default function CityMap({ reports }) {
             }),
         };
     }, []);
-
+    const navigate = useNavigate();
     return (
         <MapContainer
             center={[30.0444, 31.2357]} // fallback
@@ -85,15 +85,22 @@ export default function CityMap({ reports }) {
                             icon={icons[r.status] || icons.pending}
                         >
                             <Popup>
-                                <strong>{r.type}</strong>
-                                <br />
-                                City: {r.city}
-                                <br />
-                                Status: {r.status}
-                                <br />
-                                Address: {r.address}
-                                <br />
-                                Notes: {r.notes}
+                                <div className="space-y-1 text-sm">
+
+                                    {/* 🔥 clickable title */}
+                                    <p
+                                        onClick={() => navigate(`/reports/${r.id}`)}
+                                        className="font-bold text-blue-600 cursor-pointer hover:underline"
+                                    >
+                                        {r.type}
+                                    </p>
+
+                                    <p>City: {r.city}</p>
+                                    <p>Status: {r.status}</p>
+                                    <p>Address: {r.address}</p>
+                                    <p>Notes: {r.notes}</p>
+
+                                </div>
                             </Popup>
                         </Marker>
                     );

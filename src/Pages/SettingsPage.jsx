@@ -1,103 +1,149 @@
-import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../Context/AuthContext";
+import { useEffect, useState } from "react";
+import { auth, db } from "../firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { updatePassword, onAuthStateChanged } from "firebase/auth";
 
 export default function SettingsPage() {
-    const { setIsLoggedIn } = useContext(AuthContext);
-    const navigate = useNavigate();
+    const [admin, setAdmin] = useState(null);
+    const [user, setUser] = useState(null);
 
-    const [passwords, setPasswords] = useState({
-        current: "",
-        newPass: "",
-        confirm: "",
-    });
+    const [password, setPassword] = useState("");
+    const [confirm, setConfirm] = useState("");
 
-    function changePassword(e) {
-        e.preventDefault();
+    // 🔥 GET CURRENT USER FIRST
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
 
-        if (!passwords.current || !passwords.newPass || !passwords.confirm) {
-            alert("Please fill all fields");
+        return () => unsubscribe();
+    }, []);
+
+    // 🔥 GET ADMIN DATA FROM FIRESTORE
+    useEffect(() => {
+        async function fetchAdmin() {
+            if (!user) return;
+
+            try {
+                const ref = doc(db, "admins", user.uid);
+                const snap = await getDoc(ref);
+
+                if (snap.exists()) {
+                    setAdmin(snap.data());
+                }
+            } catch (error) {
+                console.error("Error fetching admin:", error);
+            }
+        }
+
+        fetchAdmin();
+    }, [user]);
+
+    // 🔐 CHANGE PASSWORD
+    async function changePassword() {
+        if (!password || !confirm) {
+            alert("Please fill in all fields");
             return;
         }
 
-        if (passwords.newPass !== passwords.confirm) {
+        if (password !== confirm) {
             alert("Passwords do not match");
             return;
         }
 
-        // 🔥 هنا بعدين تعمل API call
-        alert("Password changed successfully (mock)");
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters");
+            return;
+        }
 
-        setPasswords({ current: "", newPass: "", confirm: "" });
+        try {
+            await updatePassword(user, password);
+            alert("Password updated successfully");
+            setPassword("");
+            setConfirm("");
+        } catch (err) {
+            alert(err.message);
+        }
     }
 
-    function logout() {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
-        navigate("/login", { replace: true });
+    // 🔄 LOADING STATE
+    if (!admin) {
+        return (
+            <div className="flex justify-center items-center h-[70vh] text-gray-500">
+                Loading...
+            </div>
+        );
     }
 
     return (
-        <div className="max-w-xl space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-                <p className="text-sm text-slate-500">
-                    Manage your account security.
-                </p>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 px-4 py-10">
+            <div className="mx-auto max-w-4xl">
 
-            {/* Change Password */}
-            <div className="rounded-2xl border bg-white shadow-sm p-5">
-                <h2 className="font-semibold text-slate-900">Change Password</h2>
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
+                    <p className="mt-2 text-gray-500">
+                        Manage your account information and security settings
+                    </p>
+                </div>
 
-                <form onSubmit={changePassword} className="mt-4 space-y-3">
-                    <input
-                        type="password"
-                        placeholder="Current Password"
-                        value={passwords.current}
-                        onChange={(e) =>
-                            setPasswords((p) => ({ ...p, current: e.target.value }))
-                        }
-                        className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-                    <input
-                        type="password"
-                        placeholder="New Password"
-                        value={passwords.newPass}
-                        onChange={(e) =>
-                            setPasswords((p) => ({ ...p, newPass: e.target.value }))
-                        }
-                        className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
+                    {/* PROFILE */}
+                    <div className="lg:col-span-1">
+                        <div className="rounded-3xl bg-white shadow-lg border p-6 text-center">
 
-                    <input
-                        type="password"
-                        placeholder="Confirm New Password"
-                        value={passwords.confirm}
-                        onChange={(e) =>
-                            setPasswords((p) => ({ ...p, confirm: e.target.value }))
-                        }
-                        className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
+                            <div className="mb-4 flex h-24 w-24 mx-auto items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-3xl font-bold text-white">
+                                {admin.name?.charAt(0).toUpperCase()}
+                            </div>
 
-                    <button
-                        type="submit"
-                        className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2 text-sm font-semibold"
-                    >
-                        Update Password
-                    </button>
-                </form>
-            </div>
+                            <h2 className="text-xl font-bold text-gray-800">
+                                {admin.name}
+                            </h2>
 
-            {/* Logout */}
-            <div className="rounded-2xl border bg-white shadow-sm p-5">
-                <h2 className="font-semibold text-slate-900">Session</h2>
+                            <p className="text-gray-500 text-sm mt-1">
+                                {admin.email}
+                            </p>
 
-                <button onClick={logout}
-                    className="mt-4 w-full rounded-xl bg-red-600 hover:bg-red-700 text-white py-2 text-sm font-semibold">
-                    Logout
-                </button>
+                        </div>
+                    </div>
+
+                    {/* SECURITY */}
+                    <div className="lg:col-span-2">
+                        <div className="rounded-3xl bg-white shadow-lg border p-6">
+
+                            <h3 className="text-xl font-bold mb-4">Security</h3>
+
+                            <div className="space-y-4">
+
+                                <input
+                                    type="password"
+                                    placeholder="New Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full border rounded-xl px-4 py-3"
+                                />
+
+                                <input
+                                    type="password"
+                                    placeholder="Confirm Password"
+                                    value={confirm}
+                                    onChange={(e) => setConfirm(e.target.value)}
+                                    className="w-full border rounded-xl px-4 py-3"
+                                />
+
+                                <button
+                                    onClick={changePassword}
+                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold"
+                                >
+                                    Update Password
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     );
