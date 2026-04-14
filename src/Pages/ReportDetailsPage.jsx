@@ -8,14 +8,17 @@ import {
     getDocs,
     query,
     where,
+    deleteDoc
 } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
 import toast from "react-hot-toast";
-import { deleteDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
+
 export default function ReportDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [report, setReport] = useState(null);
     const [workers, setWorkers] = useState([]);
@@ -24,6 +27,7 @@ export default function ReportDetailsPage() {
     const [selectedWorker, setSelectedWorker] = useState("");
     const [status, setStatus] = useState("");
     const [selectedImage, setSelectedImage] = useState(null);
+
     useEffect(() => {
         async function fetchReport() {
             const docRef = doc(db, "reports", id);
@@ -60,7 +64,7 @@ export default function ReportDetailsPage() {
 
     async function assignWorker() {
         if (!selectedWorker) {
-            toast.error("Please select worker");
+            toast.error(t("select_worker_error"));
             return;
         }
 
@@ -70,7 +74,7 @@ export default function ReportDetailsPage() {
                 status: "in_progress",
             });
 
-            toast.success("Worker assigned successfully");
+            toast.success(t("assign_success"));
 
             setReport({
                 ...report,
@@ -81,37 +85,38 @@ export default function ReportDetailsPage() {
             setStatus("in_progress");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to assign worker");
+            toast.error(t("assign_fail"));
         }
     }
+
     async function finishReport() {
         try {
             await deleteDoc(doc(db, "reports", id));
 
-            toast.success("Report finished and deleted");
-
+            toast.success(t("finish_success"));
             navigate("/reports");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to finish report");
+            toast.error(t("finish_fail"));
         }
     }
+
     async function updateStatus() {
         try {
             await updateDoc(doc(db, "reports", id), {
                 status: status,
             });
 
-            toast.success("Status updated successfully");
+            toast.success(t("status_updated"));
             setReport({ ...report, status });
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update status");
+            toast.error(t("status_fail"));
         }
     }
 
-    if (loading) return <div className="p-6">Loading...</div>;
-    if (!report) return <div className="p-6">Report not found</div>;
+    if (loading) return <div className="p-6">{t("loading")}</div>;
+    if (!report) return <div className="p-6">{t("report_not_found")}</div>;
 
     return (
         <div className="space-y-6">
@@ -120,7 +125,7 @@ export default function ReportDetailsPage() {
                     onClick={() => navigate("/reports")}
                     className="text-sm text-indigo-600 hover:underline"
                 >
-                    ← Back to Reports
+                    ← {t("back_to_reports")}
                 </button>
 
                 <h1 className="mt-2 text-2xl font-bold">{report.type}</h1>
@@ -130,23 +135,27 @@ export default function ReportDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
                 <div className="space-y-6">
+
                     <div className="rounded-2xl border bg-white shadow-sm p-5">
-                        <h3 className="font-semibold">Description</h3>
+                        <h3 className="font-semibold">{t("description")}</h3>
                         <p className="text-sm mt-2">{report.notes}</p>
                     </div>
 
                     <div className="rounded-2xl border bg-white shadow-sm p-5">
-                        <h3 className="font-semibold">Assign to Worker</h3>
+                        <h3 className="font-semibold">{t("assign_worker")}</h3>
 
-                        <label className="text-xs text-slate-500">Select Worker</label>
+                        <label className="text-xs text-slate-500">
+                            {t("select_worker")}
+                        </label>
 
                         <select
                             value={selectedWorker}
                             onChange={(e) => setSelectedWorker(e.target.value)}
                             className="mt-2 w-full rounded-xl border px-3 py-2 text-sm"
                         >
-                            <option value="">Unassigned</option>
+                            <option value="">{t("unassigned")}</option>
 
                             {workers.map((w) => (
                                 <option key={w.id} value={w.id}>
@@ -159,50 +168,28 @@ export default function ReportDetailsPage() {
                             onClick={assignWorker}
                             className="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl"
                         >
-                            Assign
+                            {t("assign")}
                         </button>
                     </div>
 
-                    {/* <div className="rounded-2xl border bg-white shadow-sm p-5">
-                        <h3 className="font-semibold">Update Status</h3>
-
-                        <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="mt-2 w-full rounded-xl border px-3 py-2 text-sm"
-                        >
-                            <option value="pending">pending</option>
-                            <option value="in_progress">in_progress</option>
-                            <option value="resolved">resolved</option>
-                        </select>
-
-                        <button
-                            onClick={updateStatus}
-                            className="mt-3 w-full bg-black text-white py-2 rounded-xl"
-                        >
-                            Save Status
-                        </button>
-                    </div> */}
                 </div>
 
                 <div className="lg:col-span-2 space-y-4">
-                    {/* 🗺️ MAP */}
+
+                    {/* MAP */}
                     <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
                         <div className="h-96">
                             <CityMap reports={[report]} />
                         </div>
                     </div>
 
-                    {/* 🖼️ IMAGE تحت الماب */}
+                    {/* IMAGE */}
                     {report.images && report.images.length > 0 && (
                         <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
-
-                            {/* Title */}
                             <div className="p-4 border-b">
-                                <h3 className="font-semibold">Report Image</h3>
+                                <h3 className="font-semibold">{t("report_image")}</h3>
                             </div>
 
-                            {/* Image */}
                             <div className="p-4 flex justify-center">
                                 <img
                                     src={report.images[0]}
@@ -213,12 +200,12 @@ export default function ReportDetailsPage() {
                             </div>
                         </div>
                     )}
-                    {/* 🔥 AFTER IMAGE */}
+
+                    {/* AFTER IMAGE */}
                     {report.afterImage && (
                         <div className="rounded-2xl border bg-white shadow-sm overflow-hidden mt-4">
-
                             <div className="p-4 border-b">
-                                <h3 className="font-semibold">After Image</h3>
+                                <h3 className="font-semibold">{t("after_image")}</h3>
                             </div>
 
                             <div className="p-4 flex justify-center">
@@ -231,12 +218,14 @@ export default function ReportDetailsPage() {
                             </div>
                         </div>
                     )}
+
                     <button
                         onClick={finishReport}
                         className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl mt-4"
                     >
-                        Finish Report
+                        {t("finish_report")}
                     </button>
+
                     {selectedImage && (
                         <div
                             className="fixed inset-0 bg-black/80 flex items-center justify-center z-9999"
@@ -248,7 +237,6 @@ export default function ReportDetailsPage() {
                                 className="max-w-[90%] max-h-[90%] rounded-xl shadow-lg"
                             />
 
-                            {/* زرار قفل */}
                             <button
                                 onClick={() => setSelectedImage(null)}
                                 className="absolute top-5 right-5 text-white text-2xl font-bold"

@@ -16,15 +16,17 @@ import {
     signOut
 } from "firebase/auth";
 import { auth } from "../firebase/firebase";
+import { useTranslation } from "react-i18next";
 
 export default function TechnicalsPage() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
+
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
 
     const [workers, setWorkers] = useState([]);
 
-    // 🔥 Firebase GET
     useEffect(() => {
         const qRef = query(
             collection(db, "users"),
@@ -42,7 +44,6 @@ export default function TechnicalsPage() {
         return () => unsubscribe();
     }, []);
 
-    // 🔍 FILTER
     const filtered = useMemo(() => {
         return workers.filter((w) => {
             const matchQ =
@@ -58,7 +59,6 @@ export default function TechnicalsPage() {
         });
     }, [workers, q, status]);
 
-    // Modal
     const [open, setOpen] = useState(false);
     const [newWorker, setNewWorker] = useState({
         name: "",
@@ -69,7 +69,6 @@ export default function TechnicalsPage() {
         password: "",
     });
 
-    // ➕ ADD (Firebase)
     async function addWorker(e) {
         e.preventDefault();
 
@@ -113,9 +112,8 @@ export default function TechnicalsPage() {
         }
     }
 
-    // ❌ DELETE (Firebase)
     async function deleteWorker(id) {
-        const ok = confirm("Delete this technical worker?");
+        const ok = confirm(t("delete_worker_confirm"));
         if (!ok) return;
         await deleteDoc(doc(db, "users", id));
     }
@@ -126,9 +124,11 @@ export default function TechnicalsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Technicals</h1>
+                    <h1 className="text-2xl font-bold text-slate-900">
+                        {t("technicals")}
+                    </h1>
                     <p className="text-sm text-slate-500">
-                        Manage technical workers and their workload.
+                        {t("technicals_desc")}
                     </p>
                 </div>
 
@@ -137,13 +137,13 @@ export default function TechnicalsPage() {
                         onClick={() => setOpen(true)}
                         className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm font-semibold"
                     >
-                        + Add Technical
+                        + {t("add_technical")}
                     </button>
 
                     <input
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        placeholder="Search (name / phone / area)"
+                        placeholder={t("search_worker")}
                         className="w-full md:w-72 rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     />
 
@@ -152,10 +152,10 @@ export default function TechnicalsPage() {
                         onChange={(e) => setStatus(e.target.value)}
                         className="rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     >
-                        <option value="All">All Status</option>
-                        <option value="Available">Available</option>
-                        <option value="Active">Active</option>
-                        <option value="Offline">Offline</option>
+                        <option value="All">{t("all_status")}</option>
+                        <option value="Available">{t("available")}</option>
+                        <option value="Active">{t("active")}</option>
+                        <option value="Offline">{t("offline")}</option>
                     </select>
                 </div>
             </div>
@@ -163,16 +163,18 @@ export default function TechnicalsPage() {
             {/* Table */}
             <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
                 <div className="grid grid-cols-12 border-b bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
-                    <div className="col-span-4">Worker</div>
-                    <div className="col-span-3">Contact</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Tasks</div>
-                    <div className="col-span-1">Area</div>
-                    <div className="col-span-1 text-right">Action</div>
+                    <div className="col-span-4">{t("worker")}</div>
+                    <div className="col-span-3">{t("contact")}</div>
+                    <div className="col-span-2">{t("status")}</div>
+                    <div className="col-span-1">{t("tasks")}</div>
+                    <div className="col-span-1">{t("area")}</div>
+                    <div className="col-span-1 text-right">{t("action")}</div>
                 </div>
 
                 {filtered.length === 0 ? (
-                    <div className="p-6 text-sm text-slate-500">No workers found.</div>
+                    <div className="p-6 text-sm text-slate-500">
+                        {t("no_workers")}
+                    </div>
                 ) : (
                     filtered.map((w) => (
                         <button
@@ -190,7 +192,7 @@ export default function TechnicalsPage() {
 
                             <div className="col-span-2">
                                 <Badge tone={w.status === "Available" ? "success" : w.status === "Active" ? "info" : "neutral"}>
-                                    {w.status}
+                                    {t(w.status.toLowerCase())}
                                 </Badge>
                             </div>
 
@@ -211,7 +213,7 @@ export default function TechnicalsPage() {
                                     }}
                                     className="rounded-xl border border-red-200 bg-red-50 text-red-700 px-3 py-1.5 text-xs hover:bg-red-100"
                                 >
-                                    Delete
+                                    {t("delete")}
                                 </button>
                             </div>
                         </button>
@@ -226,112 +228,50 @@ export default function TechnicalsPage() {
                     onClick={() => setOpen(false)}
                 >
                     <div
-                        className="w-full max-w-md rounded-2xl bg-white border shadow-lg p-5 animate-in fade-in zoom-in-95"
+                        className="w-full max-w-md rounded-2xl bg-white border shadow-lg p-5"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header */}
                         <div className="flex items-start justify-between">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900">
-                                    Add Technical
+                                    {t("add_technical")}
                                 </h2>
                                 <p className="text-xs text-slate-500">
-                                    Create a new worker
+                                    {t("create_worker")}
                                 </p>
                             </div>
 
-                            <button
-                                onClick={() => setOpen(false)}
-                                className="text-slate-400 hover:text-slate-900 transition"
-                            >
-                                ✕
-                            </button>
+                            <button onClick={() => setOpen(false)}>✕</button>
                         </div>
 
-                        {/* Form */}
                         <form onSubmit={addWorker} className="mt-4 space-y-3">
 
-                            <div>
-                                <label className="text-xs text-slate-500">Name</label>
-                                <input
-                                    value={newWorker.name}
-                                    onChange={(e) =>
-                                        setNewWorker((p) => ({ ...p, name: e.target.value }))
-                                    }
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="Worker name"
-                                />
-                            </div>
+                            <input placeholder={t("name")} value={newWorker.name}
+                                onChange={(e) => setNewWorker(p => ({ ...p, name: e.target.value }))} />
 
-                            <div>
-                                <label className="text-xs text-slate-500">Phone</label>
-                                <input
-                                    value={newWorker.phone}
-                                    onChange={(e) =>
-                                        setNewWorker((p) => ({ ...p, phone: e.target.value }))
-                                    }
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="010xxxxxxxx"
-                                />
-                            </div>
+                            <input placeholder={t("phone")} value={newWorker.phone}
+                                onChange={(e) => setNewWorker(p => ({ ...p, phone: e.target.value }))} />
 
-                            <div>
-                                <label className="text-xs text-slate-500">Area</label>
-                                <input
-                                    value={newWorker.area}
-                                    onChange={(e) =>
-                                        setNewWorker((p) => ({ ...p, area: e.target.value }))
-                                    }
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="Cairo / Giza ..."
-                                />
-                            </div>
+                            <input placeholder={t("area")} value={newWorker.area}
+                                onChange={(e) => setNewWorker(p => ({ ...p, area: e.target.value }))} />
 
-                            <div>
-                                <label className="text-xs text-slate-500">Email</label>
-                                <input
-                                    value={newWorker.email}
-                                    onChange={(e) =>
-                                        setNewWorker((p) => ({ ...p, email: e.target.value }))
-                                    }
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="email@example.com"
-                                />
-                            </div>
+                            <input placeholder={t("email")} value={newWorker.email}
+                                onChange={(e) => setNewWorker(p => ({ ...p, email: e.target.value }))} />
 
-                            <div>
-                                <label className="text-xs text-slate-500">Password</label>
-                                <input
-                                    type="password"
-                                    value={newWorker.password}
-                                    onChange={(e) =>
-                                        setNewWorker((p) => ({ ...p, password: e.target.value }))
-                                    }
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                    placeholder="••••••••"
-                                />
-                            </div>
+                            <input type="password" placeholder={t("password")} value={newWorker.password}
+                                onChange={(e) => setNewWorker(p => ({ ...p, password: e.target.value }))} />
 
-                            <div>
-                                <label className="text-xs text-slate-500">Status</label>
-                                <select
-                                    value={newWorker.status}
-                                    onChange={(e) =>
-                                        setNewWorker((p) => ({ ...p, status: e.target.value }))
-                                    }
-                                    className="mt-1 w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
-                                >
-                                    <option value="Available">Available</option>
-                                    <option value="Active">Active</option>
-                                    <option value="Offline">Offline</option>
-                                </select>
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2 text-sm font-semibold transition"
+                            <select
+                                value={newWorker.status}
+                                onChange={(e) => setNewWorker(p => ({ ...p, status: e.target.value }))}
                             >
-                                Add
+                                <option value="Available">{t("available")}</option>
+                                <option value="Active">{t("active")}</option>
+                                <option value="Offline">{t("offline")}</option>
+                            </select>
+
+                            <button className="w-full bg-slate-900 text-white py-2 rounded-xl">
+                                {t("add")}
                             </button>
                         </form>
                     </div>

@@ -2,15 +2,25 @@ import { useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { updatePassword, onAuthStateChanged } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsPage() {
+    const { t, i18n } = useTranslation();
+
     const [admin, setAdmin] = useState(null);
     const [user, setUser] = useState(null);
 
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
 
-    // 🔥 GET CURRENT USER FIRST
+    // 🔥 Language Toggle
+    const toggleLang = () => {
+        const newLang = i18n.language === "en" ? "ar" : "en";
+        i18n.changeLanguage(newLang);
+        localStorage.setItem("lang", newLang);
+        document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
+    };
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
@@ -19,7 +29,6 @@ export default function SettingsPage() {
         return () => unsubscribe();
     }, []);
 
-    // 🔥 GET ADMIN DATA FROM FIRESTORE
     useEffect(() => {
         async function fetchAdmin() {
             if (!user) return;
@@ -32,33 +41,32 @@ export default function SettingsPage() {
                     setAdmin(snap.data());
                 }
             } catch (error) {
-                console.error("Error fetching admin:", error);
+                console.error(error);
             }
         }
 
         fetchAdmin();
     }, [user]);
 
-    // 🔐 CHANGE PASSWORD
     async function changePassword() {
         if (!password || !confirm) {
-            alert("Please fill in all fields");
+            alert(t("fill_fields"));
             return;
         }
 
         if (password !== confirm) {
-            alert("Passwords do not match");
+            alert(t("passwords_not_match"));
             return;
         }
 
         if (password.length < 6) {
-            alert("Password must be at least 6 characters");
+            alert(t("password_short"));
             return;
         }
 
         try {
             await updatePassword(user, password);
-            alert("Password updated successfully");
+            alert(t("password_updated"));
             setPassword("");
             setConfirm("");
         } catch (err) {
@@ -66,11 +74,10 @@ export default function SettingsPage() {
         }
     }
 
-    // 🔄 LOADING STATE
     if (!admin) {
         return (
             <div className="flex justify-center items-center h-[70vh] text-gray-500">
-                Loading...
+                {t("loading")}
             </div>
         );
     }
@@ -80,18 +87,30 @@ export default function SettingsPage() {
             <div className="mx-auto max-w-4xl">
 
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
-                    <p className="mt-2 text-gray-500">
-                        Manage your account information and security settings
-                    </p>
+                <div className="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">
+                            {t("settings")}
+                        </h1>
+                        <p className="mt-2 text-gray-500">
+                            {t("settings_desc")}
+                        </p>
+                    </div>
+
+                    {/* 🌐 Language Button */}
+                    <button
+                        onClick={toggleLang}
+                        className="px-4 py-2 rounded-xl bg-white border shadow-sm text-sm hover:bg-gray-50"
+                    >
+                        {i18n.language === "en" ? "AR" : "EN"}
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
                     {/* PROFILE */}
                     <div className="lg:col-span-1">
-                        <div className="rounded-3xl bg-white shadow-lg border p-6 text-center">
+                        <div className="rounded-3xl bg-white shadow-lg border p-6 text-center hover:shadow-xl transition">
 
                             <div className="mb-4 flex h-24 w-24 mx-auto items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-3xl font-bold text-white">
                                 {admin.name?.charAt(0).toUpperCase()}
@@ -110,33 +129,35 @@ export default function SettingsPage() {
 
                     {/* SECURITY */}
                     <div className="lg:col-span-2">
-                        <div className="rounded-3xl bg-white shadow-lg border p-6">
+                        <div className="rounded-3xl bg-white shadow-lg border p-6 hover:shadow-xl transition">
 
-                            <h3 className="text-xl font-bold mb-4">Security</h3>
+                            <h3 className="text-xl font-bold mb-4">
+                                {t("security")}
+                            </h3>
 
                             <div className="space-y-4">
 
                                 <input
                                     type="password"
-                                    placeholder="New Password"
+                                    placeholder={t("new_password")}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full border rounded-xl px-4 py-3"
+                                    className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-200"
                                 />
 
                                 <input
                                     type="password"
-                                    placeholder="Confirm Password"
+                                    placeholder={t("confirm_password")}
                                     value={confirm}
                                     onChange={(e) => setConfirm(e.target.value)}
-                                    className="w-full border rounded-xl px-4 py-3"
+                                    className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-200"
                                 />
 
                                 <button
                                     onClick={changePassword}
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold"
+                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white py-3 rounded-xl font-semibold transition"
                                 >
-                                    Update Password
+                                    {t("update_password")}
                                 </button>
 
                             </div>
