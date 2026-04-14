@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import { useTranslation } from "react-i18next";
 
 export default function ReportsPage() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [reports, setReports] = useState([]);
     const [q, setQ] = useState("");
@@ -54,12 +56,15 @@ export default function ReportsPage() {
 
     return (
         <div className="space-y-5">
+
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
+                    <h1 className="text-2xl font-bold text-slate-900">
+                        {t("reports")}
+                    </h1>
                     <p className="text-sm text-slate-500">
-                        Manage incoming reports and assign workers.
+                        {t("reports_desc")}
                     </p>
                 </div>
 
@@ -67,7 +72,7 @@ export default function ReportsPage() {
                     <input
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
-                        placeholder="Search (type, city, address...)"
+                        placeholder={t("search_placeholder")}
                         className="w-full md:w-72 rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     />
 
@@ -76,10 +81,10 @@ export default function ReportsPage() {
                         onChange={(e) => setStatus(e.target.value)}
                         className="rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     >
-                        <option value="All">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
+                        <option value="All">{t("all_status")}</option>
+                        <option value="pending">{t("pending")}</option>
+                        <option value="in_progress">{t("in_progress")}</option>
+                        <option value="resolved">{t("resolved")}</option>
                     </select>
 
                     <select
@@ -87,26 +92,27 @@ export default function ReportsPage() {
                         onChange={(e) => setPriority(e.target.value)}
                         className="rounded-xl border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     >
-                        <option value="All">All Priority</option>
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
+                        <option value="All">{t("all_priority")}</option>
+                        <option value="High">{t("high")}</option>
+                        <option value="Medium">{t("medium")}</option>
+                        <option value="Low">{t("low")}</option>
                     </select>
                 </div>
             </div>
 
             {/* Table */}
             <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+
                 <div className="grid grid-cols-12 border-b bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
-                    <div className="col-span-5">Report</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-2">Priority</div>
-                    <div className="col-span-3">Location / Time</div>
+                    <div className="col-span-5">{t("report")}</div>
+                    <div className="col-span-2">{t("status")}</div>
+                    <div className="col-span-2">{t("priority")}</div>
+                    <div className="col-span-3">{t("location_time")}</div>
                 </div>
 
                 {filtered.length === 0 ? (
                     <div className="p-6 text-sm text-slate-500">
-                        No reports found.
+                        {t("no_reports")}
                     </div>
                 ) : (
                     filtered.map((r) => (
@@ -163,7 +169,7 @@ export default function ReportsPage() {
 function statusTone(status) {
     if (status === "resolved") return "success";
     if (status === "in_progress") return "info";
-    return "danger"; // pending
+    return "danger";
 }
 
 function Badge({ children, tone = "neutral" }) {
@@ -179,9 +185,7 @@ function Badge({ children, tone = "neutral" }) {
                         : "bg-slate-50 text-slate-700 border-slate-200";
 
     return (
-        <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs ${cls}`}
-        >
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs ${cls}`}>
             {children}
         </span>
     );

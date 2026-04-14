@@ -34,7 +34,7 @@ function FitBounds({ reports }) {
         if (validPoints.length === 0) return;
 
         if (validPoints.length === 1) {
-            map.setView(validPoints[0], 16);
+            map.setView(validPoints[0], 11);
         } else {
             const bounds = L.latLngBounds(validPoints);
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -69,7 +69,10 @@ export default function CityMap({ reports }) {
             zoom={13}
             style={{ height: "100%", width: "100%" }}
         >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <TileLayer
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            />
+
 
             {/* 🔥 auto zoom logic */}
             <FitBounds reports={reports} />
@@ -85,23 +88,62 @@ export default function CityMap({ reports }) {
                             icon={icons[r.status] || icons.pending}
                         >
                             <Popup>
-                                <div className="space-y-1 text-sm">
+                                <div className="p-4 w-[250px] text-sm">
 
-                                    {/* 🔥 clickable title */}
+                                    {/* Title */}
                                     <p
                                         onClick={() => navigate(`/reports/${r.id}`)}
-                                        className="font-bold text-blue-600 cursor-pointer hover:underline"
+                                        className="font-semibold text-blue-600 cursor-pointer hover:underline text-lg mb-3"
                                     >
                                         {r.type}
                                     </p>
 
-                                    <p>City: {r.city}</p>
-                                    <p>Status: {r.status}</p>
-                                    <p>Address: {r.address}</p>
-                                    <p>Notes: {r.notes}</p>
+                                    {/* Info */}
+                                    <div className="space-y-2 text-gray-600">
+
+                                        <div className="flex items-center gap-2">
+                                            <span>🏙️</span>
+                                            <span>
+                                                <span className="font-medium text-gray-800">City:</span> {r.city}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <span>⚡</span>
+                                            <span className="font-medium text-gray-800">Status:</span>
+                                            <span
+                                                className={`ml-1 px-2 py-0.5 rounded-md text-xs font-medium
+                        ${r.status === "pending" && "bg-red-50 text-red-600"}
+                        ${r.status === "in_progress" && "bg-yellow-50 text-yellow-700"}
+                        ${r.status === "resolved" && "bg-green-50 text-green-600"}
+                    `}
+                                            >
+                                                {r.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-start gap-2">
+                                            <span className="mt-0.5">📍</span>
+                                            <span>
+                                                <span className="font-medium text-gray-800">Address:</span> {r.address}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Divider */}
+                                    {r.notes && (
+                                        <>
+                                            <div className="border-t my-3"></div>
+                                            <p className="text-gray-500 text-xs leading-relaxed">
+                                                {r.notes}
+                                            </p>
+                                        </>
+                                    )}
 
                                 </div>
                             </Popup>
+
+
                         </Marker>
                     );
                 })}

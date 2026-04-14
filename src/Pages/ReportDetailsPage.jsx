@@ -12,7 +12,7 @@ import {
 import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
 import toast from "react-hot-toast";
-
+import { deleteDoc } from "firebase/firestore";
 export default function ReportDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -84,7 +84,18 @@ export default function ReportDetailsPage() {
             toast.error("Failed to assign worker");
         }
     }
+    async function finishReport() {
+        try {
+            await deleteDoc(doc(db, "reports", id));
 
+            toast.success("Report finished and deleted");
+
+            navigate("/reports");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to finish report");
+        }
+    }
     async function updateStatus() {
         try {
             await updateDoc(doc(db, "reports", id), {
@@ -152,7 +163,7 @@ export default function ReportDetailsPage() {
                         </button>
                     </div>
 
-                    <div className="rounded-2xl border bg-white shadow-sm p-5">
+                    {/* <div className="rounded-2xl border bg-white shadow-sm p-5">
                         <h3 className="font-semibold">Update Status</h3>
 
                         <select
@@ -171,7 +182,7 @@ export default function ReportDetailsPage() {
                         >
                             Save Status
                         </button>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="lg:col-span-2 space-y-4">
@@ -182,24 +193,50 @@ export default function ReportDetailsPage() {
                         </div>
                     </div>
 
-                    {/* 🖼️ IMAGES تحت الماب */}
+                    {/* 🖼️ IMAGE تحت الماب */}
                     {report.images && report.images.length > 0 && (
-                        <div className="rounded-2xl border bg-white shadow-sm p-4">
-                            <h3 className="font-semibold mb-3">Report Images</h3>
+                        <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
 
-                            <div className="flex gap-3 flex-wrap">
-                                {report.images.map((img, index) => (
-                                    <img
-                                        key={index}
-                                        src={img}
-                                        alt="report"
-                                        onClick={() => setSelectedImage(img)}
-                                        className="w-40 h-40 object-cover rounded-xl border cursor-pointer hover:scale-105 transition"
-                                    />
-                                ))}
+                            {/* Title */}
+                            <div className="p-4 border-b">
+                                <h3 className="font-semibold">Report Image</h3>
+                            </div>
+
+                            {/* Image */}
+                            <div className="p-4 flex justify-center">
+                                <img
+                                    src={report.images[0]}
+                                    alt="report"
+                                    onClick={() => setSelectedImage(report.images[0])}
+                                    className="w-full max-h-[350px] object-cover rounded-xl cursor-pointer hover:scale-[1.02] transition"
+                                />
                             </div>
                         </div>
                     )}
+                    {/* 🔥 AFTER IMAGE */}
+                    {report.afterImage && (
+                        <div className="rounded-2xl border bg-white shadow-sm overflow-hidden mt-4">
+
+                            <div className="p-4 border-b">
+                                <h3 className="font-semibold">After Image</h3>
+                            </div>
+
+                            <div className="p-4 flex justify-center">
+                                <img
+                                    src={report.afterImage}
+                                    alt="after"
+                                    onClick={() => setSelectedImage(report.afterImage)}
+                                    className="w-full max-h-[350px] object-cover rounded-xl cursor-pointer hover:scale-[1.02] transition"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    <button
+                        onClick={finishReport}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl mt-4"
+                    >
+                        Finish Report
+                    </button>
                     {selectedImage && (
                         <div
                             className="fixed inset-0 bg-black/80 flex items-center justify-center z-9999"

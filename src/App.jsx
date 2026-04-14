@@ -1,18 +1,22 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import MainLayout from './Layouts/MainLayout';
-import AuthLayout from './Layouts/AuthLayout';
-import LoginPage from './Pages/LoginPage';
-import DashboardPage from './Pages/DashboardPage';
-import NotFoundPage from './Pages/NotFoundPage';
-import ReportMap from './Components/ٌReportMap';
-import { HeroUIProvider } from '@heroui/react';
-import ProtectedRoute from './Components/ProtectedRoute';
-import AuthProtectedRoute from './Components/AuthProtectedRoute';
-import ReportsPage from './Pages/ReportsPage';
-import ReportDetailsPage from './Pages/ReportDetailsPage';
-import TechnicalsPage from './Pages/TechnicalsPage';
+import { useEffect } from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { HeroUIProvider } from "@heroui/react";
+
+import MainLayout from "./Layouts/MainLayout";
+import AuthLayout from "./Layouts/AuthLayout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import AuthProtectedRoute from "./Components/AuthProtectedRoute";
+
+import DashboardPage from "./Pages/DashboardPage";
+import LoginPage from "./Pages/LoginPage";
+import NotFoundPage from "./Pages/NotFoundPage";
+import ReportMap from "./Components/ٌReportMap";
+import ReportsPage from "./Pages/ReportsPage";
+import ReportDetailsPage from "./Pages/ReportDetailsPage";
+import TechnicalsPage from "./Pages/TechnicalsPage";
 import AdminsPage from "./Pages/AdminsPage";
-import SettingsPage from './Pages/SettingsPage';
+import SettingsPage from "./Pages/SettingsPage";
 
 const router = createBrowserRouter([
   {
@@ -50,12 +54,19 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const lang = i18n.language;
+
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  }, [i18n.language]);
+
   return (
-    <>
-      <HeroUIProvider>
-        <RouterProvider router={router} />
-      </HeroUIProvider>
-    </>
+    <HeroUIProvider>
+      <RouterProvider router={router} />
+    </HeroUIProvider>
   );
 }
 

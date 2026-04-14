@@ -10,6 +10,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
 import StatCard from "../Components/StatCard";
+import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
     // 🔥 Firebase Reports State
@@ -18,6 +19,7 @@ export default function Dashboard() {
     // Filters
     const [statusFilter, setStatusFilter] = useState("All");
     const [priorityFilter, setPriorityFilter] = useState("All");
+    const { t } = useTranslation();
 
     // 🔥 Real-time Firestore Listener
     useEffect(() => {
@@ -59,32 +61,33 @@ export default function Dashboard() {
 
         return [
             {
-                title: "Total Reports",
+                title: t("total_reports"),
                 value: total,
                 icon: <FaClipboardList className="text-indigo-500" />,
             },
             {
-                title: "New / Unassigned",
+                title: t("new_unassigned"),
                 value: newReports,
                 icon: <FaExclamationTriangle className="text-amber-500" />,
             },
             {
-                title: "In Progress",
+                title: t("in_progress"),
                 value: inProgress,
                 icon: <FaClock className="text-blue-500" />,
             },
             {
-                title: "Completed",
+                title: t("completed"),
                 value: completed,
                 icon: <FaCheckCircle className="text-green-500" />,
             },
             {
-                title: "High Priority (AI)",
+                title: t("high_priority_ai"),
                 value: highPriority,
                 icon: <FaExclamationTriangle className="text-red-500" />,
             },
         ];
-    }, [reports]);
+    }, [reports, t]);
+
 
     const highPriorityCount = reports.filter(
         (r) => r.priority === "High"
@@ -95,10 +98,14 @@ export default function Dashboard() {
             {/* Header */}
             <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        {t("dashboard")}
+                    </h1>
+
                     <p className="text-sm text-slate-500">
-                        Track reports, prioritize urgent issues, and monitor city status.
+                        {t("dashboard_desc")}
                     </p>
+
                 </div>
 
                 {/* <div className="flex flex-wrap gap-2">
@@ -125,10 +132,14 @@ export default function Dashboard() {
             <section className="rounded-2xl border bg-white shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
-                        <h2 className="font-semibold text-slate-900">City Map</h2>
+                        <h2 className="font-semibold text-slate-900">
+                            {t("city_map")}
+                        </h2>
+
                         <p className="text-xs text-slate-500">
-                            Filter markers by status and priority.
+                            {t("map_desc")}
                         </p>
+
                     </div>
 
                     <div className="flex gap-2 flex-wrap">
@@ -136,25 +147,27 @@ export default function Dashboard() {
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
-                            <option value="All">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
+                            <option value="All">{t("all_status")}</option>
+                            <option value="pending">{t("pending")}</option>
+                            <option value="in_progress">{t("in_progress")}</option>
+                            <option value="resolved">{t("resolved")}</option>
+
                         </Select>
 
                         <Select
                             value={priorityFilter}
                             onChange={(e) => setPriorityFilter(e.target.value)}
                         >
-                            <option value="All">All Priority</option>
-                            <option value="High">High</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Low">Low</option>
+                            <option value="All">{t("all_priority")}</option>
+                            <option value="High">{t("high")}</option>
+                            <option value="Medium">{t("medium")}</option>
+                            <option value="Low">{t("low")}</option>
+
                         </Select>
                     </div>
                 </div>
 
-                <div className="h-130">
+                <div className="h-90">
                     <CityMap reports={filteredReports} />
                 </div>
             </section>
