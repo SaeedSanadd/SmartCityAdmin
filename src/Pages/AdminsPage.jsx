@@ -158,45 +158,99 @@ export default function AdminsPage() {
 
             {/* MODAL */}
             {open && (
-                <div className="fixed inset-0 z-[99999] bg-black/60 flex items-center justify-center">
-                    <div className="bg-white p-5 rounded-2xl w-full max-w-md">
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
 
-                        <h2 className="text-lg font-bold">
+                    {/* Modal Card */}
+                    <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 relative animate-scaleIn">
+
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setOpen(false)}
+                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg"
+                        >
+                            ✕
+                        </button>
+
+                        {/* Title */}
+                        <h2 className="text-xl font-bold text-gray-800 mb-1">
                             {t("add_admin")}
                         </h2>
+                        <p className="text-sm text-gray-500 mb-5">
+                            {t("admins_desc")}
+                        </p>
 
-                        <form onSubmit={addAdmin} className="mt-4 space-y-3">
+                        {/* Form */}
+                        <form onSubmit={addAdmin} className="space-y-4">
 
-                            <input
-                                value={newAdmin.name}
-                                onChange={(e) => setNewAdmin((p) => ({ ...p, name: e.target.value }))}
-                                placeholder={t("name")}
-                                className="w-full border p-2 rounded"
-                            />
+                            {/* Name */}
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1 block">
+                                    {t("name")}
+                                </label>
+                                <input
+                                    value={newAdmin.name}
+                                    onChange={(e) =>
+                                        setNewAdmin((p) => ({ ...p, name: e.target.value }))
+                                    }
+                                    placeholder={t("name")}
+                                    className="w-full rounded-xl border px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 outline-none"
+                                />
+                            </div>
 
-                            <input
-                                value={newAdmin.email}
-                                onChange={(e) => setNewAdmin((p) => ({ ...p, email: e.target.value }))}
-                                placeholder={t("email")}
-                                className="w-full border p-2 rounded"
-                            />
+                            {/* Email */}
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1 block">
+                                    {t("email")}
+                                </label>
+                                <input
+                                    value={newAdmin.email}
+                                    onChange={(e) =>
+                                        setNewAdmin((p) => ({ ...p, email: e.target.value }))
+                                    }
+                                    placeholder={t("email")}
+                                    className="w-full rounded-xl border px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 outline-none"
+                                />
+                            </div>
 
-                            <input
-                                type="password"
-                                value={newAdmin.password}
-                                onChange={(e) => setNewAdmin((p) => ({ ...p, password: e.target.value }))}
-                                placeholder={t("password")}
-                                className="w-full border p-2 rounded"
-                            />
+                            {/* Password */}
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1 block">
+                                    {t("password")}
+                                </label>
+                                <input
+                                    type="password"
+                                    value={newAdmin.password}
+                                    onChange={(e) =>
+                                        setNewAdmin((p) => ({ ...p, password: e.target.value }))
+                                    }
+                                    placeholder={t("password")}
+                                    className="w-full rounded-xl border px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300 outline-none"
+                                />
+                            </div>
 
-                            <button className="w-full bg-black text-white py-2 rounded">
-                                {t("add")}
-                            </button>
+                            {/* Buttons */}
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(false)}
+                                    className="w-full rounded-xl border py-2 text-sm hover:bg-gray-100"
+                                >
+                                    {t("cancel") || "Cancel"}
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2 text-sm font-semibold shadow-sm"
+                                >
+                                    {t("add")}
+                                </button>
+                            </div>
 
                         </form>
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

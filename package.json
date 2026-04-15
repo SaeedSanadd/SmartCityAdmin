@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroui/react": "^2.8.9",
     "@hookform/resolvers": "^5.2.2",
+    "@react-google-maps/api": "^2.20.8",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.5",
     "firebase": "^12.10.0",

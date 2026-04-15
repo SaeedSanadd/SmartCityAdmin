@@ -5,34 +5,25 @@ import {
     onSnapshot,
     query,
     where,
-    addDoc,
     deleteDoc,
     doc,
-} from "firebase/firestore";
-import { db } from "../firebase/firebase";
-
-import {
-    createUserWithEmailAndPassword,
-    signOut
-} from "firebase/auth";
+    setDoc   // ✅ بدل addDoc
+} from "firebase/firestore"; import { db } from "../firebase/firebase";
+import { createUserWithEmailAndPassword, signOut} from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useTranslation } from "react-i18next";
 
 export default function TechnicalsPage() {
     const navigate = useNavigate();
     const { t } = useTranslation();
-
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
-
     const [workers, setWorkers] = useState([]);
-
     useEffect(() => {
         const qRef = query(
             collection(db, "users"),
             where("role", "==", "technical")
         );
-
         const unsubscribe = onSnapshot(qRef, (snapshot) => {
             const data = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -40,10 +31,8 @@ export default function TechnicalsPage() {
             }));
             setWorkers(data);
         });
-
         return () => unsubscribe();
     }, []);
-
     const filtered = useMemo(() => {
         return workers.filter((w) => {
             const matchQ =
@@ -51,14 +40,11 @@ export default function TechnicalsPage() {
                 `${w.name} ${w.phone} ${w.area}`
                     .toLowerCase()
                     .includes(q.toLowerCase());
-
             const matchStatus =
                 status === "All" ? true : w.status === status;
-
             return matchQ && matchStatus;
         });
     }, [workers, q, status]);
-
     const [open, setOpen] = useState(false);
     const [newWorker, setNewWorker] = useState({
         name: "",
@@ -68,13 +54,19 @@ export default function TechnicalsPage() {
         email: "",
         password: "",
     });
-
     async function addWorker(e) {
         e.preventDefault();
 
-        if (!newWorker.name || !newWorker.phone || !newWorker.area || !newWorker.email || !newWorker.password) return;
+        if (
+            !newWorker.name ||
+            !newWorker.phone ||
+            !newWorker.area ||
+            !newWorker.email ||
+            !newWorker.password
+        ) return;
 
         try {
+            /// 🔥 1. create user in AUTH
             const userCred = await createUserWithEmailAndPassword(
                 auth,
                 newWorker.email,
@@ -83,8 +75,8 @@ export default function TechnicalsPage() {
 
             const user = userCred.user;
 
-            await addDoc(collection(db, "users"), {
-                uid: user.uid,
+            /// 🔥 2. save in Firestore باستخدام UID
+            await setDoc(doc(db, "users", user.uid), {
                 name: newWorker.name,
                 phone: newWorker.phone,
                 area: newWorker.area,
@@ -94,8 +86,10 @@ export default function TechnicalsPage() {
                 email: newWorker.email,
             });
 
+            /// ⚠️ مهم: ترجع تعمل logout
             await signOut(auth);
 
+            /// 🔄 reset form
             setNewWorker({
                 name: "",
                 phone: "",
@@ -111,7 +105,6 @@ export default function TechnicalsPage() {
             alert(err.message);
         }
     }
-
     async function deleteWorker(id) {
         const ok = confirm(t("delete_worker_confirm"));
         if (!ok) return;
