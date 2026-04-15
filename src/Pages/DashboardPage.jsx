@@ -88,7 +88,6 @@ export default function Dashboard() {
         ];
     }, [reports, t]);
 
-
     const highPriorityCount = reports.filter(
         (r) => r.priority === "High"
     ).length;
@@ -105,15 +104,7 @@ export default function Dashboard() {
                     <p className="text-sm text-slate-500">
                         {t("dashboard_desc")}
                     </p>
-
                 </div>
-
-                {/* <div className="flex flex-wrap gap-2">
-                    <Pill
-                        label={`High Priority: ${highPriorityCount}`}
-                        tone="danger"
-                    />
-                </div> */}
             </header>
 
             {/* KPI Cards */}
@@ -139,7 +130,6 @@ export default function Dashboard() {
                         <p className="text-xs text-slate-500">
                             {t("map_desc")}
                         </p>
-
                     </div>
 
                     <div className="flex gap-2 flex-wrap">
@@ -151,7 +141,6 @@ export default function Dashboard() {
                             <option value="pending">{t("pending")}</option>
                             <option value="in_progress">{t("in_progress")}</option>
                             <option value="resolved">{t("resolved")}</option>
-
                         </Select>
 
                         <Select
@@ -162,12 +151,12 @@ export default function Dashboard() {
                             <option value="High">{t("high")}</option>
                             <option value="Medium">{t("medium")}</option>
                             <option value="Low">{t("low")}</option>
-
                         </Select>
                     </div>
                 </div>
 
-                <div className="h-90">
+                {/* 🔥 Responsive Map Height */}
+                <div className="h-[40vh] sm:h-[50vh] lg:h-[60vh]">
                     <CityMap reports={filteredReports} />
                 </div>
             </section>

@@ -158,15 +158,19 @@ export default function AdminsPage() {
 
             {/* MODAL */}
             {open && (
-                <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+                <div
+                    onClick={() => setOpen(false)}
+                    className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                >
 
-                    {/* Modal Card */}
-                    <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 relative animate-scaleIn">
-
-                        {/* Close Button */}
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 relative"
+                    >
+                        {/* Close */}
                         <button
                             onClick={() => setOpen(false)}
-                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg"
+                            className="absolute top-3 end-3 text-gray-400 hover:text-gray-600 text-lg"
                         >
                             ✕
                         </button>
