@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')).render(
           },
           success: {
             iconTheme: {
-              primary: "#22c55e",   // green-500
+              primary: "#2e7d32",   // forest green
               secondary: "#fff",
             },
           },

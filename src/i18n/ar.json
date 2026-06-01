@@ -65,6 +65,7 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "add": "إضافة",
+    "cancel": "إلغاء",
     "available": "متاح",
     "active": "نشط",
     "offline": "غير متصل",
@@ -93,5 +94,11 @@
     "not_admin": "ليس لديك صلاحية الدخول كأدمن",
     "user_not_found": "المستخدم غير موجود",
     "wrong_password": "كلمة المرور غير صحيحة",
-    "invalid_credentials": "بيانات الدخول غير صحيحة"
+    "invalid_credentials": "بيانات الدخول غير صحيحة",
+    "waiting_for_technical": "في انتظار تقرير الفني",
+    "cannot_finish_no_report": "لا يمكن إنهاء البلاغ لأن الفني لم يرسل تقرير العمل النهائي (الصورة بعد الإصلاح) بعد.",
+    "technical_info": "معلومات الفني",
+    "report_info": "معلومات البلاغ",
+    "submitted": "تاريخ الإرسال",
+    "report_type": "النوع"
 }

@@ -3,6 +3,7 @@ import { auth, db } from "../firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { updatePassword, onAuthStateChanged } from "firebase/auth";
 import { useTranslation } from "react-i18next";
+import { FaLock, FaGlobe, FaShieldAlt } from "react-icons/fa";
 
 export default function SettingsPage() {
     const { t, i18n } = useTranslation();
@@ -13,7 +14,6 @@ export default function SettingsPage() {
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
 
-    // 🔥 Language Toggle
     const toggleLang = () => {
         const newLang = i18n.language === "en" ? "ar" : "en";
         i18n.changeLanguage(newLang);
@@ -25,18 +25,15 @@ export default function SettingsPage() {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
         });
-
         return () => unsubscribe();
     }, []);
 
     useEffect(() => {
         async function fetchAdmin() {
             if (!user) return;
-
             try {
                 const ref = doc(db, "admins", user.uid);
                 const snap = await getDoc(ref);
-
                 if (snap.exists()) {
                     setAdmin(snap.data());
                 }
@@ -44,7 +41,6 @@ export default function SettingsPage() {
                 console.error(error);
             }
         }
-
         fetchAdmin();
     }, [user]);
 
@@ -53,17 +49,14 @@ export default function SettingsPage() {
             alert(t("fill_fields"));
             return;
         }
-
         if (password !== confirm) {
             alert(t("passwords_not_match"));
             return;
         }
-
         if (password.length < 6) {
             alert(t("password_short"));
             return;
         }
-
         try {
             await updatePassword(user, password);
             alert(t("password_updated"));
@@ -76,94 +69,111 @@ export default function SettingsPage() {
 
     if (!admin) {
         return (
-            <div className="flex justify-center items-center h-[70vh] text-gray-500">
-                {t("loading")}
+            <div className="flex justify-center items-center h-[70vh]">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="spinner !border-primary/30 !border-t-primary !w-8 !h-8" />
+                    <p className="text-sm text-slate-400">{t("loading")}</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 px-4 py-10">
-            <div className="mx-auto max-w-4xl">
-
-                {/* Header */}
-                <div className="mb-8 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">
-                            {t("settings")}
-                        </h1>
-                        <p className="mt-2 text-gray-500">
-                            {t("settings_desc")}
-                        </p>
-                    </div>
-
-                    {/* 🌐 Language Button */}
-                    <button
-                        onClick={toggleLang}
-                        className="px-4 py-2 rounded-xl bg-white border shadow-sm text-sm hover:bg-gray-50"
-                    >
-                        {i18n.language === "en" ? "AR" : "EN"}
-                    </button>
+        <div className="space-y-6 animate-fadeInUp">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                        {t("settings")}
+                    </h1>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        {t("settings_desc")}
+                    </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <button
+                    onClick={toggleLang}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-sm hover:bg-slate-50 hover:shadow-md transition-all font-medium text-slate-600"
+                >
+                    <FaGlobe className="text-primary/60 text-xs" />
+                    {i18n.language === "en" ? "AR" : "EN"}
+                </button>
+            </div>
 
-                    {/* PROFILE */}
-                    <div className="lg:col-span-1">
-                        <div className="rounded-3xl bg-white shadow-lg border p-6 text-center hover:shadow-xl transition">
-
-                            <div className="mb-4 flex h-24 w-24 mx-auto items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-3xl font-bold text-white">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* PROFILE */}
+                <div className="lg:col-span-1 animate-fadeInUp stagger-2">
+                    <div className="rounded-2xl glass-card-strong p-6 text-center hover-lift">
+                        <div className="relative mx-auto mb-4">
+                            <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-primary/20">
                                 {admin.name?.charAt(0).toUpperCase()}
                             </div>
+                            <div className="absolute bottom-0 right-1/2 translate-x-[40px] h-5 w-5 rounded-full bg-emerald-500 border-[3px] border-white" />
+                        </div>
 
-                            <h2 className="text-xl font-bold text-gray-800">
-                                {admin.name}
-                            </h2>
+                        <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                            {admin.name}
+                        </h2>
 
-                            <p className="text-gray-500 text-sm mt-1">
-                                {admin.email}
-                            </p>
+                        <p className="text-slate-400 text-sm mt-0.5">
+                            {admin.email}
+                        </p>
 
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-full px-3 py-1">
+                                <FaShieldAlt className="text-[9px]" />
+                                Admin
+                            </span>
                         </div>
                     </div>
+                </div>
 
-                    {/* SECURITY */}
-                    <div className="lg:col-span-2">
-                        <div className="rounded-3xl bg-white shadow-lg border p-6 hover:shadow-xl transition">
+                {/* SECURITY */}
+                <div className="lg:col-span-2 animate-fadeInUp stagger-3">
+                    <div className="rounded-2xl glass-card-strong p-6 hover-lift">
+                        <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                                <FaLock className="text-xs" />
+                            </div>
+                            {t("security")}
+                        </h3>
+                        <p className="text-xs text-slate-400 mb-5">Update your password to keep your account secure</p>
 
-                            <h3 className="text-xl font-bold mb-4">
-                                {t("security")}
-                            </h3>
-
-                            <div className="space-y-4">
-
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[11px] text-slate-400 mb-1 block font-medium uppercase tracking-wider">
+                                    {t("new_password")}
+                                </label>
                                 <input
                                     type="password"
                                     placeholder={t("new_password")}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-200"
+                                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
                                 />
+                            </div>
 
+                            <div>
+                                <label className="text-[11px] text-slate-400 mb-1 block font-medium uppercase tracking-wider">
+                                    {t("confirm_password")}
+                                </label>
                                 <input
                                     type="password"
                                     placeholder={t("confirm_password")}
                                     value={confirm}
                                     onChange={(e) => setConfirm(e.target.value)}
-                                    className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-200"
+                                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
                                 />
-
-                                <button
-                                    onClick={changePassword}
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white py-3 rounded-xl font-semibold transition"
-                                >
-                                    {t("update_password")}
-                                </button>
-
                             </div>
+
+                            <button
+                                onClick={changePassword}
+                                className="w-full bg-gradient-to-r from-primary to-emerald-600 hover:from-primary-hover hover:to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all"
+                            >
+                                {t("update_password")}
+                            </button>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

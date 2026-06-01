@@ -65,6 +65,7 @@
     "email": "Email",
     "password": "Password",
     "add": "Add",
+    "cancel": "Cancel",
     "available": "Available",
     "active": "Active",
     "offline": "Offline",
@@ -93,6 +94,11 @@
     "not_admin": "You are not authorized as an admin",
     "user_not_found": "User not found",
     "wrong_password": "Wrong password",
-    "invalid_credentials": "Invalid email or password"
-
+    "invalid_credentials": "Invalid email or password",
+    "waiting_for_technical": "Waiting for Technical Report",
+    "cannot_finish_no_report": "The report cannot be finished because the technician has not submitted the final work report (after image) yet.",
+    "technical_info": "Technical Info",
+    "report_info": "Report Info",
+    "submitted": "Submitted",
+    "report_type": "Type"
 }
