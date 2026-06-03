@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { updatePassword, onAuthStateChanged } from "firebase/auth";
 import { useTranslation } from "react-i18next";
-import { FaLock, FaGlobe, FaShieldAlt } from "react-icons/fa";
+import { FaLock, FaGlobe, FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function SettingsPage() {
     const { t, i18n } = useTranslation();
@@ -13,6 +13,35 @@ export default function SettingsPage() {
 
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedName, setEditedName] = useState("");
+    const [showPass, setShowPass] = useState(false);
+    const [showConfirmPass, setShowConfirmPass] = useState(false);
+    const isRtl = i18n.language === "ar";
+
+    useEffect(() => {
+        if (admin) {
+            setEditedName(admin.name || "");
+        }
+    }, [admin]);
+
+    async function handleUpdateProfile() {
+        if (!editedName.trim()) {
+            alert(t("fill_fields"));
+            return;
+        }
+        try {
+            const ref = doc(db, "admins", user.uid);
+            await updateDoc(ref, { name: editedName });
+            setAdmin({ ...admin, name: editedName });
+            setIsEditing(false);
+            alert(t("profile_updated") || "Profile updated successfully!");
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
+    }
 
     const toggleLang = () => {
         const newLang = i18n.language === "en" ? "ar" : "en";
@@ -111,13 +140,54 @@ export default function SettingsPage() {
                             <div className="absolute bottom-0 right-1/2 translate-x-[40px] h-5 w-5 rounded-full bg-emerald-500 border-[3px] border-white" />
                         </div>
 
-                        <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                            {admin.name}
-                        </h2>
+                        {isEditing ? (
+                            <div className="space-y-3 mt-4 text-start">
+                                <div>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                                        {t("name")}
+                                    </label>
+                                    <input
+                                        value={editedName}
+                                        onChange={(e) => setEditedName(e.target.value)}
+                                        className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleUpdateProfile}
+                                        className="w-full bg-primary hover:bg-primary-hover text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                                    >
+                                        {t("save_changes") || "Save"}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditedName(admin.name || "");
+                                            setIsEditing(false);
+                                        }}
+                                        className="w-full border border-slate-200 text-slate-500 hover:bg-slate-50 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer bg-white"
+                                    >
+                                        {t("cancel")}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <h2 className="text-lg font-bold text-slate-900 tracking-tight mt-4">
+                                    {admin.name}
+                                </h2>
 
-                        <p className="text-slate-400 text-sm mt-0.5">
-                            {admin.email}
-                        </p>
+                                <p className="text-slate-400 text-sm mt-0.5">
+                                    {admin.email}
+                                </p>
+
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="mt-4 w-full bg-slate-100 hover:bg-slate-200/80 text-slate-600 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border border-slate-200/30"
+                                >
+                                    {t("edit_profile") || "Edit Profile"}
+                                </button>
+                            </>
+                        )}
 
                         <div className="mt-4 pt-4 border-t border-slate-100">
                             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-full px-3 py-1">
@@ -140,30 +210,48 @@ export default function SettingsPage() {
                         <p className="text-xs text-slate-400 mb-5">Update your password to keep your account secure</p>
 
                         <div className="space-y-4">
-                            <div>
+                             <div>
                                 <label className="text-[11px] text-slate-400 mb-1 block font-medium uppercase tracking-wider">
                                     {t("new_password")}
                                 </label>
-                                <input
-                                    type="password"
-                                    placeholder={t("new_password")}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPass ? "text" : "password"}
+                                        placeholder={t("new_password")}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className={`w-full border border-slate-200 rounded-xl ${isRtl ? 'pr-4 pl-10' : 'pl-4 pr-10'} py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPass(!showPass)}
+                                        className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3' : 'right-3'} text-slate-400 hover:text-slate-600 transition cursor-pointer z-10`}
+                                    >
+                                        {showPass ? <FaEyeSlash className="text-xs" /> : <FaEye className="text-xs" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
                                 <label className="text-[11px] text-slate-400 mb-1 block font-medium uppercase tracking-wider">
                                     {t("confirm_password")}
                                 </label>
-                                <input
-                                    type="password"
-                                    placeholder={t("confirm_password")}
-                                    value={confirm}
-                                    onChange={(e) => setConfirm(e.target.value)}
-                                    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPass ? "text" : "password"}
+                                        placeholder={t("confirm_password")}
+                                        value={confirm}
+                                        onChange={(e) => setConfirm(e.target.value)}
+                                        className={`w-full border border-slate-200 rounded-xl ${isRtl ? 'pr-4 pl-10' : 'pl-4 pr-10'} py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                        className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3' : 'right-3'} text-slate-400 hover:text-slate-600 transition cursor-pointer z-10`}
+                                    >
+                                        {showConfirmPass ? <FaEyeSlash className="text-xs" /> : <FaEye className="text-xs" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <button

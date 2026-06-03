@@ -5,18 +5,16 @@ import {
     deleteDoc,
     doc,
 } from "firebase/firestore";
-import { db } from "../firebase/firebase";
-import { setDoc } from "firebase/firestore";
-import {
-    createUserWithEmailAndPassword,
-    signOut
-} from "firebase/auth";
-import { auth } from "../firebase/firebase";
+import { db, auth, firebaseConfig } from "../firebase/firebase";
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useTranslation } from "react-i18next";
-import { FaSearch, FaTrash, FaPlus, FaUserShield, FaInbox } from "react-icons/fa";
+import { FaSearch, FaTrash, FaPlus, FaUserShield, FaInbox, FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function AdminsPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRtl = i18n.language === "ar";
+    const [showPass, setShowPass] = useState(false);
 
     const [q, setQ] = useState("");
     const [admins, setAdmins] = useState([]);
@@ -49,9 +47,12 @@ export default function AdminsPage() {
         e.preventDefault();
         if (!newAdmin.name || !newAdmin.email || !newAdmin.password) return;
 
+        const tempApp = initializeApp(firebaseConfig, "TempAdminApp");
+        const tempAuth = getAuth(tempApp);
+
         try {
             const userCred = await createUserWithEmailAndPassword(
-                auth,
+                tempAuth,
                 newAdmin.email,
                 newAdmin.password
             );
@@ -64,12 +65,12 @@ export default function AdminsPage() {
                 role: "admin",
             });
 
-            await signOut(auth);
-
             setNewAdmin({ name: "", email: "", password: "" });
             setOpen(false);
         } catch (error) {
             alert(error.message);
+        } finally {
+            await tempApp.delete();
         }
     }
 
@@ -228,14 +229,23 @@ export default function AdminsPage() {
                                 <label className="text-[11px] text-slate-400 mb-1 block font-medium uppercase tracking-wider">
                                     {t("password")}
                                 </label>
-                                <input
-                                    type="password"
-                                    value={newAdmin.password}
-                                    onChange={(e) => setNewAdmin((p) => ({ ...p, password: e.target.value }))}
-                                    placeholder={t("password")}
-                                    autoComplete="new-password"
-                                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPass ? "text" : "password"}
+                                        value={newAdmin.password}
+                                        onChange={(e) => setNewAdmin((p) => ({ ...p, password: e.target.value }))}
+                                        placeholder={t("password")}
+                                        autoComplete="new-password"
+                                        className={`w-full rounded-xl border border-slate-200 ${isRtl ? 'pr-3 pl-10' : 'pl-3 pr-10'} py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPass(!showPass)}
+                                        className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3' : 'right-3'} text-slate-400 hover:text-slate-600 transition cursor-pointer z-10`}
+                                    >
+                                        {showPass ? <FaEyeSlash className="text-xs" /> : <FaEye className="text-xs" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-2">

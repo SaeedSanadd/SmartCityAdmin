@@ -9,6 +9,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
 import StatCard from "../Components/StatCard";
+import AnalyticsCharts from "../Components/AnalyticsCharts";
 import { useTranslation } from "react-i18next";
 
 export default function Dashboard() {
@@ -119,8 +120,13 @@ export default function Dashboard() {
                 ))}
             </section>
 
+            {/* Visual Charts */}
+            <section className="animate-fadeInUp stagger-6">
+                <AnalyticsCharts reports={reports} />
+            </section>
+
             {/* Map */}
-            <section className="rounded-2xl glass-card-strong overflow-hidden animate-fadeInUp stagger-6">
+            <section className="rounded-2xl glass-card-strong overflow-hidden animate-fadeInUp stagger-7">
                 <div className="px-5 py-4 border-b border-slate-100/80 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
                         <h2 className="font-bold text-slate-900 text-base">

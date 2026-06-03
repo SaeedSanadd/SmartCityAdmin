@@ -6,20 +6,51 @@ import {
     where,
     deleteDoc,
     doc,
-    setDoc
+    setDoc,
+    getDocs
 } from "firebase/firestore";
-import { db } from "../firebase/firebase";
-import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "../firebase/firebase";
+import { useNavigate } from "react-router-dom";
+import { db, auth, firebaseConfig } from "../firebase/firebase";
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useTranslation } from "react-i18next";
-import { FaSearch, FaTrash, FaPlus, FaUserCog, FaInbox } from "react-icons/fa";
+import { FaSearch, FaTrash, FaPlus, FaUserCog, FaInbox, FaEye, FaEyeSlash, FaUsers, FaUserCheck, FaUserClock, FaUserTimes } from "react-icons/fa";
 import Badge from "../Components/Badge";
+import StatCard from "../Components/StatCard";
 
 export default function TechnicalsPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRtl = i18n.language === "ar";
+    const navigate = useNavigate();
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
     const [workers, setWorkers] = useState([]);
+
+    const [inspectingWorker, setInspectingWorker] = useState(null);
+    const [selectedWorkerTasks, setSelectedWorkerTasks] = useState([]);
+    const [loadingTasks, setLoadingTasks] = useState(false);
+    const [showPass, setShowPass] = useState(false);
+
+    async function inspectWorkerTasks(worker) {
+        setInspectingWorker(worker);
+        setLoadingTasks(true);
+        setSelectedWorkerTasks([]);
+        try {
+            const q = query(
+                collection(db, "reports"),
+                where("assignedTo", "==", worker.id)
+            );
+            const snap = await getDocs(q);
+            const tasks = snap.docs
+                .map((d) => ({ id: d.id, ...d.data() }))
+                .filter((t) => t.status !== "resolved");
+            setSelectedWorkerTasks(tasks);
+        } catch (err) {
+            console.error("Failed to fetch worker tasks:", err);
+        } finally {
+            setLoadingTasks(false);
+        }
+    }
 
     useEffect(() => {
         const qRef = query(
@@ -48,6 +79,40 @@ export default function TechnicalsPage() {
         });
     }, [workers, q, status]);
 
+    const stats = useMemo(() => {
+        const total = workers.length;
+        const available = workers.filter((w) => w.status?.toLowerCase() === "available").length;
+        const active = workers.filter((w) => w.status?.toLowerCase() === "active").length;
+        const offline = workers.filter((w) => w.status?.toLowerCase() === "offline").length;
+
+        return [
+            {
+                title: t("total_workers"),
+                value: total,
+                icon: <FaUsers />,
+                bgClass: "bg-primary/10 text-primary border-primary/20",
+            },
+            {
+                title: t("available"),
+                value: available,
+                icon: <FaUserCheck />,
+                bgClass: "bg-green-50 text-green-600 border-green-200/60",
+            },
+            {
+                title: t("active"),
+                value: active,
+                icon: <FaUserClock />,
+                bgClass: "bg-blue-50 text-blue-600 border-blue-200/60",
+            },
+            {
+                title: t("offline"),
+                value: offline,
+                icon: <FaUserTimes />,
+                bgClass: "bg-red-50 text-red-600 border-red-200/60",
+            },
+        ];
+    }, [workers, t]);
+
     const [open, setOpen] = useState(false);
     const [newWorker, setNewWorker] = useState({
         name: "",
@@ -62,9 +127,12 @@ export default function TechnicalsPage() {
         e.preventDefault();
         if (!newWorker.name || !newWorker.phone || !newWorker.area || !newWorker.email || !newWorker.password) return;
 
+        const tempApp = initializeApp(firebaseConfig, "TempTechnicalApp");
+        const tempAuth = getAuth(tempApp);
+
         try {
             const userCred = await createUserWithEmailAndPassword(
-                auth,
+                tempAuth,
                 newWorker.email,
                 newWorker.password
             );
@@ -80,8 +148,6 @@ export default function TechnicalsPage() {
                 email: newWorker.email,
             });
 
-            await signOut(auth);
-
             setNewWorker({
                 name: "",
                 phone: "",
@@ -93,6 +159,8 @@ export default function TechnicalsPage() {
             setOpen(false);
         } catch (err) {
             alert(err.message);
+        } finally {
+            await tempApp.delete();
         }
     }
 
@@ -169,6 +237,18 @@ export default function TechnicalsPage() {
                 </div>
             </div>
 
+            {/* KPI Cards */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {stats.map((stat, idx) => (
+                    <div
+                        key={idx}
+                        className={`animate-fadeInUp stagger-${idx + 1}`}
+                    >
+                        <StatCard {...stat} />
+                    </div>
+                ))}
+            </section>
+
             {/* Table */}
             <div className="rounded-2xl glass-card-strong overflow-hidden animate-fadeInUp stagger-2">
                 <div className="grid grid-cols-12 border-b border-slate-100/80 bg-slate-50/60 px-5 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -189,7 +269,8 @@ export default function TechnicalsPage() {
                     filtered.map((w, idx) => (
                         <div
                             key={w.id}
-                            className={`grid grid-cols-12 px-5 py-4 items-center table-row-hover animate-fadeIn`}
+                            onClick={() => inspectWorkerTasks(w)}
+                            className="grid grid-cols-12 px-5 py-4 items-center table-row-hover animate-fadeIn cursor-pointer"
                             style={{ animationDelay: `${Math.min(idx * 40, 320)}ms` }}
                         >
                             <div className="col-span-4 flex items-center gap-3">
@@ -326,14 +407,23 @@ export default function TechnicalsPage() {
                                 <label className="text-[11px] text-slate-400 mb-1 block font-medium uppercase tracking-wider">
                                     {t("password")}
                                 </label>
-                                <input
-                                    type="password"
-                                    value={newWorker.password}
-                                    onChange={(e) => setNewWorker(p => ({ ...p, password: e.target.value }))}
-                                    placeholder={t("password")}
-                                    autoComplete="new-password"
-                                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPass ? "text" : "password"}
+                                        value={newWorker.password}
+                                        onChange={(e) => setNewWorker(p => ({ ...p, password: e.target.value }))}
+                                        placeholder={t("password")}
+                                        autoComplete="new-password"
+                                        className={`w-full rounded-xl border border-slate-200 ${isRtl ? 'pr-3 pl-10' : 'pl-3 pr-10'} py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPass(!showPass)}
+                                        className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3' : 'right-3'} text-slate-400 hover:text-slate-600 transition cursor-pointer z-10`}
+                                    >
+                                        {showPass ? <FaEyeSlash className="text-xs" /> : <FaEye className="text-xs" />}
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
@@ -368,6 +458,81 @@ export default function TechnicalsPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Inspect Modal */}
+            {inspectingWorker && (
+                <div
+                    className="fixed inset-0 z-[99999] bg-slate-900/40 flex items-center justify-center p-4 animate-overlayIn"
+                    onClick={() => setInspectingWorker(null)}
+                >
+                    <div
+                        className="w-full max-w-lg rounded-2xl glass-card-strong shadow-2xl p-6 sm:p-8 relative animate-modalIn"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Close */}
+                        <button
+                            onClick={() => setInspectingWorker(null)}
+                            className="absolute top-4 end-4 text-slate-400 hover:text-slate-600 text-lg transition cursor-pointer"
+                        >
+                            ✕
+                        </button>
+
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                                {(inspectingWorker.name || "?").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900">
+                                    {inspectingWorker.name}
+                                </h2>
+                                <p className="text-xs text-slate-400">
+                                    {t("active_assigned_tasks") || "Active Assigned Tasks"} ({selectedWorkerTasks.length})
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* List of Tasks */}
+                        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                            {loadingTasks ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                                    <div className="spinner !border-primary/30 !border-t-primary" />
+                                    <p className="text-xs text-slate-400">{t("loading")}</p>
+                                </div>
+                            ) : selectedWorkerTasks.length === 0 ? (
+                                <div className="text-center py-12 text-slate-400 text-xs font-medium">
+                                    {t("no_active_tasks") || "No active tasks assigned."}
+                                </div>
+                            ) : (
+                                selectedWorkerTasks.map((task) => (
+                                    <div
+                                        key={task.id}
+                                        className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition flex items-center justify-between gap-4"
+                                    >
+                                        <div className="min-w-0 flex-1 text-start">
+                                            <p className="font-bold text-slate-800 text-sm truncate">
+                                                {task.type}
+                                            </p>
+                                            <p className="text-xs text-slate-500 mt-1 truncate">
+                                                📍 {task.city} • {task.address}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setInspectingWorker(null);
+                                                navigate(`/reports/${task.id}`);
+                                            }}
+                                            className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary-hover text-xs font-bold transition shrink-0 cursor-pointer"
+                                        >
+                                            {t("back_to_reports") || "View"} →
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

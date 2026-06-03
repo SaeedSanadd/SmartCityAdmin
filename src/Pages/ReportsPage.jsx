@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { useTranslation } from "react-i18next";
-import { FaSearch, FaChevronRight, FaInbox } from "react-icons/fa";
+import { FaSearch, FaChevronRight, FaInbox, FaDownload } from "react-icons/fa";
 import Badge, { statusTone, priorityTone } from "../Components/Badge";
 
 export default function ReportsPage() {
@@ -14,6 +14,37 @@ export default function ReportsPage() {
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
     const [priority, setPriority] = useState("All");
+
+    const exportToCSV = () => {
+        if (filtered.length === 0) return;
+        const headers = ["Report ID", "Type", "Status", "Priority", "City", "Address", "Date"];
+        const csvRows = [
+            headers.join(","),
+            ...filtered.map(r => {
+                const date = r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : new Date(r.createdAt).toLocaleString()) : "";
+                const row = [
+                    r.id,
+                    `"${(r.type || "").replace(/"/g, '""')}"`,
+                    `"${(r.status || "").replace(/"/g, '""')}"`,
+                    `"${(r.priority || "").replace(/"/g, '""')}"`,
+                    `"${(r.city || "").replace(/"/g, '""')}"`,
+                    `"${(r.address || "").replace(/"/g, '""')}"`,
+                    `"${date.replace(/"/g, '""')}"`
+                ];
+                return row.join(",");
+            })
+        ];
+        const csvContent = "\uFEFF" + csvRows.join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `SCMS_Reports_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, "reports"), (snapshot) => {
@@ -76,6 +107,16 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap items-center">
+                    {/* Export button */}
+                    <button
+                        onClick={exportToCSV}
+                        disabled={filtered.length === 0}
+                        className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 disabled:cursor-not-allowed px-4 py-2 text-sm font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer"
+                    >
+                        <FaDownload className="text-xs" />
+                        {t("export_csv")}
+                    </button>
+
                     {/* Search */}
                     <div className="relative">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs" />

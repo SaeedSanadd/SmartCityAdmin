@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   doc,
@@ -76,7 +76,7 @@ function StatusTimeline({ currentStatus }) {
 export default function ReportDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [report, setReport] = useState(null);
   const [workers, setWorkers] = useState([]);
@@ -86,6 +86,59 @@ export default function ReportDetailsPage() {
   const [status, setStatus] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [assignedWorkerInfo, setAssignedWorkerInfo] = useState(null);
+
+  const isRtl = i18n.language === "ar";
+
+  // Calculate workload and area recommendations
+  const sortedWorkers = useMemo(() => {
+    if (!report || workers.length === 0) return [];
+    return [...workers].map((w) => {
+      const matchesArea =
+        (report.city && w.area && report.city.toLowerCase().trim() === w.area.toLowerCase().trim()) ||
+        (report.address && w.area && report.address.toLowerCase().includes(w.area.toLowerCase().trim()));
+      
+      const score = (matchesArea ? 100 : 0) - (w.tasks || 0) * 10;
+      return { ...w, matchesArea, score };
+    }).sort((a, b) => b.score - a.score);
+  }, [workers, report]);
+
+  // Dynamic Audit Timeline Events
+  const timelineEvents = useMemo(() => {
+    if (!report) return [];
+    if (report.history && report.history.length > 0) {
+      return report.history;
+    }
+    
+    const events = [];
+    if (report.createdAt) {
+      events.push({
+        action: "created",
+        timestamp: report.createdAt.seconds
+          ? new Date(report.createdAt.seconds * 1000).toISOString()
+          : new Date(report.createdAt).toISOString(),
+        actor: "Citizen"
+      });
+    }
+    if (report.assignedTo) {
+      const createdTime = report.createdAt?.seconds 
+        ? report.createdAt.seconds * 1000 
+        : new Date(report.createdAt || Date.now()).getTime();
+      events.push({
+        action: "assigned",
+        timestamp: new Date(createdTime + 60000).toISOString(),
+        actor: "Admin",
+        userName: assignedWorkerInfo?.name || "Technical"
+      });
+    }
+    if (report.status === "resolved") {
+      events.push({
+        action: "resolved",
+        timestamp: new Date().toISOString(),
+        actor: "Admin"
+      });
+    }
+    return events;
+  }, [report, assignedWorkerInfo]);
 
   useEffect(() => {
     async function fetchReport() {
@@ -144,15 +197,59 @@ export default function ReportDetailsPage() {
       return;
     }
     try {
-      await updateDoc(doc(db, "reports", id), {
+      const prevWorkerId = report.assignedTo;
+      const reportRef = doc(db, "reports", id);
+
+      const logEntry = {
+        action: "assigned",
+        timestamp: new Date().toISOString(),
+        actor: "Admin",
+        userId: selectedWorker,
+        userName: workers.find(w => w.id === selectedWorker)?.name || "Technical"
+      };
+
+      const updatedHistory = report.history ? [...report.history, logEntry] : [
+        { 
+          action: "created", 
+          timestamp: report.createdAt?.seconds 
+            ? new Date(report.createdAt.seconds * 1000).toISOString()
+            : new Date(report.createdAt || Date.now()).toISOString(), 
+          actor: "Citizen" 
+        },
+        logEntry
+      ];
+
+      await updateDoc(reportRef, {
         assignedTo: selectedWorker,
         status: "in_progress",
+        history: updatedHistory
       });
+
+      // Update task counts for workers
+      if (prevWorkerId && prevWorkerId !== selectedWorker) {
+        const prevRef = doc(db, "users", prevWorkerId);
+        const prevSnap = await getDoc(prevRef);
+        if (prevSnap.exists()) {
+          const currentTasks = prevSnap.data().tasks || 0;
+          await updateDoc(prevRef, { tasks: Math.max(0, currentTasks - 1) });
+        }
+      }
+
+      if (!prevWorkerId || prevWorkerId !== selectedWorker) {
+        const nextRef = doc(db, "users", selectedWorker);
+        const nextSnap = await getDoc(nextRef);
+        if (nextSnap.exists()) {
+          const currentTasks = nextSnap.data().tasks || 0;
+          await updateDoc(nextRef, { tasks: currentTasks + 1 });
+        }
+      }
+
       toast.success(t("assign_success"));
       setReport({
         ...report,
         assignedTo: selectedWorker,
         status: "in_progress",
+        history: updatedHistory
       });
       setStatus("in_progress");
     } catch (error) {
@@ -163,11 +260,40 @@ export default function ReportDetailsPage() {
 
   async function finishReport() {
     try {
-      await updateDoc(doc(db, "reports", id), {
+      const reportRef = doc(db, "reports", id);
+      const logEntry = {
+        action: "resolved",
+        timestamp: new Date().toISOString(),
+        actor: "Admin"
+      };
+
+      const updatedHistory = report.history ? [...report.history, logEntry] : [
+        { 
+          action: "created", 
+          timestamp: report.createdAt?.seconds 
+            ? new Date(report.createdAt.seconds * 1000).toISOString()
+            : new Date(report.createdAt || Date.now()).toISOString(), 
+          actor: "Citizen" 
+        },
+        logEntry
+      ];
+
+      await updateDoc(reportRef, {
         status: "resolved",
+        history: updatedHistory
       });
+
+      if (report.assignedTo) {
+        const workerRef = doc(db, "users", report.assignedTo);
+        const workerSnap = await getDoc(workerRef);
+        if (workerSnap.exists()) {
+          const currentTasks = workerSnap.data().tasks || 0;
+          await updateDoc(workerRef, { tasks: Math.max(0, currentTasks - 1) });
+        }
+      }
+
       toast.success(t("finish_success"));
-      setReport({ ...report, status: "resolved" });
+      setReport({ ...report, status: "resolved", history: updatedHistory });
       setStatus("resolved");
     } catch (error) {
       console.error(error);
@@ -285,14 +411,18 @@ export default function ReportDetailsPage() {
             <select
               value={selectedWorker}
               onChange={(e) => setSelectedWorker(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer"
             >
               <option value="">{t("unassigned")}</option>
-              {workers.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name || w.email}
-                </option>
-              ))}
+              {sortedWorkers.map((w) => {
+                const workloadStr = `(${w.tasks || 0} ${t("active_tasks")})`;
+                const recommendation = w.matchesArea ? ` | 📍 ${t("recommended")}` : "";
+                return (
+                  <option key={w.id} value={w.id}>
+                    {w.name || w.email} {workloadStr} {recommendation}
+                  </option>
+                );
+              })}
             </select>
 
             <button
@@ -388,6 +518,51 @@ export default function ReportDetailsPage() {
                   <span className="text-slate-700 text-xs">{report.type}</span>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Audit Timeline */}
+          <div className="rounded-2xl glass-card-strong p-5 hover-lift">
+            <h3 className="font-bold text-slate-800 text-sm mb-5 flex items-center gap-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+              {t("history_timeline")}
+            </h3>
+            
+            <div className={`relative ${isRtl ? 'pr-5 border-r' : 'pl-5 border-l'} border-slate-100 space-y-6`}>
+              {timelineEvents.map((evt, idx) => {
+                let title = "";
+                let bgCircle = "";
+                
+                if (evt.action === "created") {
+                  title = t("action_created");
+                  bgCircle = "bg-blue-500";
+                } else if (evt.action === "assigned") {
+                  title = `${t("action_assigned")} ${evt.userName || "Technical"}`;
+                  bgCircle = "bg-amber-500";
+                } else if (evt.action === "in_progress") {
+                  title = t("action_in_progress");
+                  bgCircle = "bg-indigo-500";
+                } else if (evt.action === "resolved") {
+                  title = t("action_resolved");
+                  bgCircle = "bg-emerald-500";
+                }
+                
+                return (
+                  <div key={idx} className="relative">
+                    <div className={`absolute ${isRtl ? '-right-[26px]' : '-left-[26px]'} top-1 h-3.5 w-3.5 rounded-full ${bgCircle} border-[3px] border-white shadow-sm`} />
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800 leading-snug">
+                        {title}
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                        <span>{new Date(evt.timestamp).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span>{new Date(evt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

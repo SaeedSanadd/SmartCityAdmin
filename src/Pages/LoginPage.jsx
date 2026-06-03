@@ -1,4 +1,4 @@
-import { FaCity, FaLock, FaEnvelope } from "react-icons/fa";
+import { FaCity, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import bg from "./../assets/bg.png";
 import * as zod from "zod";
 import React, { useContext, useState } from "react";
@@ -22,6 +22,8 @@ export default function LoginPage() {
 
     const [apiError, setApiError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showPass, setShowPass] = useState(false);
+    const isRtl = i18n.language === "ar";
 
     const { setIsLoggedIn } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -63,6 +65,7 @@ export default function LoginPage() {
             }
 
             localStorage.setItem("adminUid", user.uid);
+            localStorage.setItem("token", user.uid);
             setIsLoggedIn(true);
             navigate("/", { replace: true });
         } catch (error) {
@@ -148,14 +151,21 @@ export default function LoginPage() {
                             {/* Password */}
                             <div>
                                 <div className="relative group">
-                                    <FaLock className="absolute top-1/2 -translate-y-1/2 left-3.5 text-slate-300 group-focus-within:text-primary transition-colors text-sm" />
+                                    <FaLock className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'right-3.5' : 'left-3.5'} text-slate-300 group-focus-within:text-primary transition-colors text-sm`} />
                                     <input
-                                        type="password"
+                                        type={showPass ? "text" : "password"}
                                         placeholder={t("password")}
-                                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-sm bg-white/80
+                                        className={`w-full ${isRtl ? 'pr-10 pl-10' : 'pl-10 pr-10'} py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-sm bg-white/80
                                         ${errors.password ? "border-red-300" : "border-slate-200"}`}
                                         {...register("password")}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPass(!showPass)}
+                                        className={`absolute top-1/2 -translate-y-1/2 ${isRtl ? 'left-3' : 'right-3'} text-slate-400 hover:text-slate-600 transition cursor-pointer z-10`}
+                                    >
+                                        {showPass ? <FaEyeSlash className="text-xs" /> : <FaEye className="text-xs" />}
+                                    </button>
                                 </div>
                                 {errors.password && (
                                     <p className="mt-1.5 text-xs text-red-500 font-medium">

@@ -16,6 +16,7 @@ const ReportDetailsPage = lazy(() => import("./Pages/ReportDetailsPage"));
 const TechnicalsPage = lazy(() => import("./Pages/TechnicalsPage"));
 const AdminsPage = lazy(() => import("./Pages/AdminsPage"));
 const SettingsPage = lazy(() => import("./Pages/SettingsPage"));
+const ResetPasswordPage = lazy(() => import("./Pages/ResetPasswordPage"));
 
 // Loading fallback
 function PageLoader() {
@@ -59,6 +60,14 @@ const router = createBrowserRouter([
                 element: (
                     <AuthProtectedRoute>
                         <SuspenseWrap><LoginPage /></SuspenseWrap>
+                    </AuthProtectedRoute>
+                ),
+            },
+            {
+                path: "reset-password",
+                element: (
+                    <AuthProtectedRoute>
+                        <SuspenseWrap><ResetPasswordPage /></SuspenseWrap>
                     </AuthProtectedRoute>
                 ),
             },

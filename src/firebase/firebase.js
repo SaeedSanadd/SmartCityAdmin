@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 // Firebase configuration
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyD-MG9e8-PtnOAgP5mvf8LDyPMr4OijUAg",
     authDomain: "waste-report-81922.firebaseapp.com",
     projectId: "waste-report-81922",

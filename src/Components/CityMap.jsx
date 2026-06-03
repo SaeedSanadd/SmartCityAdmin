@@ -1,4 +1,5 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -34,6 +35,9 @@ function FitBounds({ reports }) {
 }
 
 export default function CityMap({ reports }) {
+    const { t } = useTranslation();
+    const [mapMode, setMapMode] = useState("satellite");
+
     const icons = useMemo(() => {
         return {
             pending: new L.Icon({
@@ -54,13 +58,41 @@ export default function CityMap({ reports }) {
     const navigate = useNavigate();
 
     return (
-        <MapContainer
-            center={[30.0444, 31.2357]}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }}>
-            <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-            <FitBounds reports={reports} />
+        <div className="relative w-full h-full">
+            {/* Custom Map Mode Toggle */}
+            <div className={`absolute top-3 ${document.documentElement.dir === 'rtl' ? 'left-3' : 'right-3'} z-[1000] flex bg-white/95 backdrop-blur-sm p-1 rounded-xl shadow-md border border-slate-200/50`}>
+                <button
+                    onClick={() => setMapMode("satellite")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer ${mapMode === "satellite" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}
+                >
+                    {t("satellite") || "Satellite"}
+                </button>
+                <button
+                    onClick={() => setMapMode("street")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer ${mapMode === "street" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}
+                >
+                    {t("street") || "Street"}
+                </button>
+            </div>
+
+            <MapContainer
+                center={[30.0444, 31.2357]}
+                zoom={13}
+                style={{ height: "100%", width: "100%" }}>
+                {mapMode === "satellite" ? (
+                    <>
+                        <TileLayer
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
+                        <TileLayer
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}" />
+                    </>
+                ) : (
+                    <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
+                )}
+                <FitBounds reports={reports} />
             {reports &&
                 reports.map((r) => {
                     if (!r.lat || !r.lng) return null;
@@ -126,5 +158,6 @@ export default function CityMap({ reports }) {
                     );
                 })}
         </MapContainer>
+        </div>
     );
 }
