@@ -88,12 +88,9 @@ export default function BinsMap({ bins }) {
           {t("street") || "Street"}
         </button>
       </div>
-
       <MapContainer
-        center={[30.0444, 31.2357]}
-        zoom={13}
-        style={{ height: "100%", width: "100%" }}
-      >
+        center={[30.0444, 31.2357]} zoom={13}
+        style={{ height: "100%", width: "100%" }}>
         {mapMode === "satellite" ? (
           <>
             <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
@@ -102,8 +99,7 @@ export default function BinsMap({ bins }) {
         ) : (
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'/>
         )}
         <FitBounds bins={bins} />
         {bins &&
@@ -112,18 +108,14 @@ export default function BinsMap({ bins }) {
             const markerIcon =
               b.status === "FULL" ? icons.FULL : icons.NORMAL;
             return (
-              <Marker
-                key={b.id || b.binId}
-                position={[Number(b.latitude), Number(b.longitude)]}
-                icon={markerIcon}
-              >
+              <Marker key={b.id || b.binId}
+                position={[Number(b.latitude), Number(b.longitude)]} icon={markerIcon}>
                 <Popup>
                   <div className="p-4 w-64">
                     {/* Title */}
                     <p className="font-bold text-primary text-base mb-2.5 tracking-tight">
                       {b.binId}
                     </p>
-
                     {/* Info */}
                     <div className="space-y-2">
                       <div className="flex items-start gap-2 text-sm">
@@ -135,7 +127,6 @@ export default function BinsMap({ bins }) {
                           {b.locationName}
                         </span>
                       </div>
-
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-slate-400">⚡</span>
                         <span className="font-semibold text-slate-700">
@@ -145,9 +136,6 @@ export default function BinsMap({ bins }) {
                           {getStatusLabel(b.status)}
                         </Badge>
                       </div>
-
-
-
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-slate-400">📅</span>
                         <span className="text-slate-600">
@@ -158,24 +146,16 @@ export default function BinsMap({ bins }) {
                         </span>
                       </div>
                     </div>
-
                     <div className="border-t border-slate-100 my-3" />
-
                     {/* Google Maps link */}
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full text-center text-xs font-semibold text-white bg-primary hover:bg-primary-hover transition py-2 rounded-lg"
-                    >
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}`} target="_blank"rel="noopener noreferrer"
+                      className="block w-full text-center text-xs font-semibold text-white bg-primary hover:bg-primary-hover transition py-2 rounded-lg">
                       Google Maps ↗
                     </a>
-
                     {/* View details button */}
                     <button
                       onClick={() => navigate(`/bins-reports/${b.id}`)}
-                      className="mt-2 block w-full text-center text-xs font-semibold text-primary hover:text-primary-hover transition py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/10 cursor-pointer"
-                    >
+                      className="mt-2 block w-full text-center text-xs font-semibold text-primary hover:text-primary-hover transition py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/10 cursor-pointer">
                       {t("view_details") || "View Details"} →
                     </button>
                   </div>

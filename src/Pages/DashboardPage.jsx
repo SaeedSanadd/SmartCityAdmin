@@ -1,23 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  FaClipboardList,
-  FaClock,
-  FaCheckCircle,
-  FaExclamationTriangle,
-} from "react-icons/fa";
+import {FaClipboardList,FaClock,FaCheckCircle,FaExclamationTriangle,} from "react-icons/fa";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
 import StatCard from "../Components/StatCard";
 import AnalyticsCharts from "../Components/AnalyticsCharts";
 import { useTranslation } from "react-i18next";
-
 export default function Dashboard() {
   const [reports, setReports] = useState([]);
   const [bins, setBins] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
   const { t } = useTranslation();
-
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "reports"), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -28,7 +21,6 @@ export default function Dashboard() {
     });
     return () => unsubscribe();
   }, []);
-
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Bins"), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -39,13 +31,11 @@ export default function Dashboard() {
     });
     return () => unsubscribe();
   }, []);
-
   const filteredReports = useMemo(() => {
     return reports.filter((r) => {
       return statusFilter === "All" ? true : r.status === statusFilter;
     });
   }, [reports, statusFilter]);
-
   const filteredBins = useMemo(() => {
     return bins.filter((b) => {
       if (statusFilter === "All") return true;
@@ -61,13 +51,11 @@ export default function Dashboard() {
       return true;
     });
   }, [bins, statusFilter]);
-
   const kpis = useMemo(() => {
     const total = reports.length;
     const newReports = reports.filter((r) => r.status === "pending").length;
     const inProgress = reports.filter((r) => r.status === "in_progress").length;
     const completed = reports.filter((r) => r.status === "resolved").length;
-
     return [
       {
         title: t("total_reports"),
@@ -100,14 +88,12 @@ export default function Dashboard() {
   const hour = new Date().getHours();
   const greetingKey =
     hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-
   const statusFilters = [
     { key: "All", label: t("all_status") },
     { key: "pending", label: t("pending") },
     { key: "in_progress", label: t("in_progress") },
     { key: "resolved", label: t("resolved") },
   ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -117,7 +103,6 @@ export default function Dashboard() {
         </h1>
         <p className="text-sm text-slate-500 mt-0.5">{t("dashboard_desc")}</p>
       </header>
-
       {/* KPI Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((stat, idx) => (
@@ -126,12 +111,10 @@ export default function Dashboard() {
           </div>
         ))}
       </section>
-
       {/* Visual Charts */}
       <section className="animate-fadeInUp stagger-6">
         <AnalyticsCharts reports={reports} bins={bins} />
       </section>
-
       {/* Map */}
       <section className="rounded-2xl glass-card-strong overflow-hidden animate-fadeInUp stagger-7">
         <div className="px-5 py-4 border-b border-slate-100/80 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -146,23 +129,15 @@ export default function Dashboard() {
             {/* Status Filter Pills */}
             <div className="flex rounded-xl border border-slate-200/80 overflow-hidden bg-slate-50/50">
               {statusFilters.map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => setStatusFilter(f.key)}
-                  className={`px-3 py-1.5 text-xs font-medium transition-all duration-200
-                                        ${
-                                          statusFilter === f.key
-                                            ? "bg-primary text-white shadow-sm"
-                                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-                                        }`}
-                >
+                <button key={f.key} onClick={() => setStatusFilter(f.key)} 
+                className={`px-3 py-1.5 text-xs font-medium transition-all duration-200
+                  ${ statusFilter === f.key ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}>
                   {f.label}
                 </button>
               ))}
             </div>
           </div>
         </div>
-
         <div className="h-[40vh] sm:h-[50vh] lg:h-[60vh]">
           <CityMap reports={filteredReports} bins={filteredBins} />
         </div>

@@ -2,21 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { useTranslation } from "react-i18next";
-import {
-  FaSearch,
-  FaInbox,
-  FaDownload,
-  FaMapMarkedAlt,
-  FaList,
-  FaTrash,
-  FaExclamationTriangle,
-  FaCheckCircle,
-} from "react-icons/fa";
+import {FaSearch,FaInbox,FaDownload,FaMapMarkedAlt,FaList,FaTrash,FaExclamationTriangle,FaCheckCircle} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Badge from "../Components/Badge";
 import StatCard from "../Components/StatCard";
 import BinsMap from "../Components/BinsMap";
-
 export default function BinsReportsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -25,7 +15,6 @@ export default function BinsReportsPage() {
   const [status, setStatus] = useState("All");
   const [viewMode, setViewMode] = useState("table"); // 'table' or 'map'
   const [sortOrder, setSortOrder] = useState("newest"); // 'newest' or 'oldest'
-
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Bins"), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -36,12 +25,10 @@ export default function BinsReportsPage() {
     });
     return () => unsubscribe();
   }, []);
-
   const kpis = useMemo(() => {
     const total = bins.length;
     const full = bins.filter((b) => b.status === "FULL").length;
     const normal = bins.filter((b) => b.status !== "FULL").length;
-
     return [
       {
         title: t("total_bins"),
@@ -71,17 +58,14 @@ export default function BinsReportsPage() {
         `${b.binId ?? ""} ${b.locationName ?? ""}`
           .toLowerCase()
           .includes(q.toLowerCase());
-
       const matchStatus =
         status === "All"
           ? true
           : status === "FULL"
           ? b.status === "FULL"
           : b.status !== "FULL";
-
       return matchQ && matchStatus;
     });
-
     return result.sort((a, b) => {
       const getMs = (item) => {
         if (!item.reportDate) return 0;
@@ -91,20 +75,16 @@ export default function BinsReportsPage() {
       };
       const msA = getMs(a);
       const msB = getMs(b);
-
       return sortOrder === "newest" ? msB - msA : msA - msB;
     });
   }, [bins, q, status, sortOrder]);
-
   const getStatusBadgeTone = (status) => {
     return status === "FULL" ? "danger" : "success";
   };
-
   const getStatusLabel = (status) => {
     if (status === "FULL") return t("full");
     return t("normal");
   };
-
   const exportToCSV = () => {
     if (filtered.length === 0) return;
     const headers = [
@@ -151,7 +131,6 @@ export default function BinsReportsPage() {
     { key: "FULL", label: t("full") },
     { key: "NORMAL", label: t("normal") },
   ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -164,18 +143,15 @@ export default function BinsReportsPage() {
             {t("bins_reports_desc")}
           </p>
         </div>
-
         <div className="flex gap-2 flex-wrap items-center">
           {/* Export button */}
           <button
             onClick={exportToCSV}
             disabled={filtered.length === 0}
-            className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 disabled:cursor-not-allowed px-4 py-2 text-sm font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer"
-          >
+            className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-600 disabled:cursor-not-allowed px-4 py-2 text-sm font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer">
             <FaDownload className="text-xs" />
             {t("export_csv")}
           </button>
-
           {/* Search */}
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs" />
@@ -183,10 +159,8 @@ export default function BinsReportsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("search_placeholder")}
-              className="w-full md:w-64 rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
-            />
+              className="w-full md:w-64 rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"/>
           </div>
-
           {/* Status pills */}
           <div className="flex rounded-xl border border-slate-200/80 overflow-hidden bg-slate-50/50">
             {statusFilters.map((f) => (
@@ -194,55 +168,37 @@ export default function BinsReportsPage() {
                 key={f.key}
                 onClick={() => setStatus(f.key)}
                 className={`px-3 py-2 text-xs font-medium transition-all duration-200 cursor-pointer
-                  ${
-                    status === f.key
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-                  }`}
-              >
+                  ${status === f.key ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}>
                 {f.label}
               </button>
             ))}
           </div>
-
           {/* Sort select */}
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-slate-600 font-medium cursor-pointer"
-          >
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-slate-600 font-medium cursor-pointer">
             <option value="newest">{t("newest_first")}</option>
             <option value="oldest">{t("oldest_first")}</option>
           </select>
-
           {/* View Mode Toggle */}
           <div className="flex rounded-xl border border-slate-200/80 overflow-hidden bg-slate-50/50 p-0.5">
             <button
               onClick={() => setViewMode("table")}
               title={t("table_view")}
-              className={`p-2 rounded-lg transition-all duration-200 cursor-pointer ${
-                viewMode === "table"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-              }`}
-            >
+              className={`p-2 rounded-lg transition-all duration-200 cursor-pointer
+                ${viewMode === "table" ? "bg-primary text-white shadow-sm"
+                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`} >
               <FaList className="text-sm" />
             </button>
-            <button
-              onClick={() => setViewMode("map")}
-              title={t("map_view")}
-              className={`p-2 rounded-lg transition-all duration-200 cursor-pointer ${
-                viewMode === "map"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-              }`}
-            >
+            <button onClick={() => setViewMode("map")} title={t("map_view")}
+            className={`p-2 rounded-lg transition-all duration-200 cursor-pointer ${ viewMode === "map"
+              ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}>
               <FaMapMarkedAlt className="text-sm" />
             </button>
           </div>
         </div>
       </div>
-
       {/* KPI Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {kpis.map((stat, idx) => (
@@ -251,7 +207,6 @@ export default function BinsReportsPage() {
           </div>
         ))}
       </section>
-
       {/* Content Container (Table or Map) */}
       <div className="rounded-2xl glass-card-strong overflow-hidden animate-fadeInUp stagger-5">
         {viewMode === "table" ? (
@@ -263,7 +218,6 @@ export default function BinsReportsPage() {
               <div className="col-span-2 text-start">{t("bin_status")}</div>
               <div className="col-span-2 text-start">{t("location_time")}</div>
             </div>
-
             {/* Table Body */}
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-slate-400">
@@ -275,15 +229,9 @@ export default function BinsReportsPage() {
               </div>
             ) : (
               filtered.map((b, idx) => (
-                <button
-                  key={b.id || b.binId}
-                  onClick={() => navigate(`/bins-reports/${b.id}`)}
-                  className={`w-full text-start grid grid-cols-12 px-5 py-4 items-center table-row-hover group animate-fadeIn stagger-${Math.min(
-                    idx + 1,
-                    8
-                  )} cursor-pointer`}
-                  style={{ animationDelay: `${Math.min(idx * 40, 320)}ms` }}
-                >
+                <button key={b.id || b.binId} onClick={() => navigate(`/bins-reports/${b.id}`)}
+                className={`w-full text-start grid grid-cols-12 px-5 py-4 items-center table-row-hover group animate-fadeIn
+                  stagger-${Math.min(idx + 1,8)} cursor-pointer`} style={{ animationDelay: `${Math.min(idx * 40, 320)}ms` }}>
                   <div className="col-span-2 flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-primary/8 text-primary text-xs font-bold flex items-center justify-center shrink-0">
                       <FaTrash className="text-xs" />
@@ -292,7 +240,6 @@ export default function BinsReportsPage() {
                       {b.binId}
                     </span>
                   </div>
-
                   <div className="col-span-6 min-w-0 pr-2">
                     <p className="text-sm font-medium text-slate-800 truncate">
                       {b.locationName}
@@ -302,13 +249,11 @@ export default function BinsReportsPage() {
                       {Number(b.longitude).toFixed(4)}
                     </p>
                   </div>
-
                   <div className="col-span-2">
                     <Badge tone={getStatusBadgeTone(b.status)}>
                       {getStatusLabel(b.status)}
                     </Badge>
                   </div>
-
                   <div className="col-span-2 flex items-center justify-between min-w-0">
                     <div>
                       <p className="text-xs text-slate-700">{b.reportDate}</p>
@@ -317,13 +262,9 @@ export default function BinsReportsPage() {
                       </p>
                     </div>
                     {/* Maps Link */}
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-xs font-semibold text-primary hover:text-primary-hover border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-lg px-2.5 py-1.5 transition ml-2 opacity-0 group-hover:opacity-100 cursor-pointer shrink-0"
-                    >
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}`} target="_blank"
+                    rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                    className="text-xs font-semibold text-primary hover:text-primary-hover border border-primary/20 bg-primary/5 hover:bg-primary/10 rounded-lg px-2.5 py-1.5 transition ml-2 opacity-0 group-hover:opacity-100 cursor-pointer shrink-0">
                       Maps ↗
                     </a>
                   </div>

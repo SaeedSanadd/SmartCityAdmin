@@ -320,7 +320,7 @@ export default function ReportDetailsPage() {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="spinner !border-primary/30 !border-t-primary !w-8 !h-8" />
+          <div className="spinner border-primary/30! border-t-primary! w-8! h-8!" />
           <p className="text-sm text-slate-400">{t("loading")}</p>
         </div>
       </div>
@@ -342,7 +342,7 @@ export default function ReportDetailsPage() {
     <div className="space-y-6 animate-fadeInUp">
       {/* Header Card */}
       <div className="rounded-2xl glass-card-strong overflow-hidden">
-        <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-primary to-emerald-600" />
+        <div className="h-1.5 w-full bg-linear-to-r from-emerald-500 via-primary to-emerald-600" />
 
         <div className="p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -414,15 +414,11 @@ export default function ReportDetailsPage() {
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">{t("unassigned")}</option>
-              {sortedWorkers.map((w) => {
-                const workloadStr = `(${w.tasks || 0} ${t("active_tasks")})`;
-                const recommendation = w.matchesArea ? ` | 📍 ${t("recommended")}` : "";
-                return (
-                  <option key={w.id} value={w.id}>
-                    {w.name || w.email} {workloadStr} {recommendation}
-                  </option>
-                );
-              })}
+              {sortedWorkers.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name || w.email}
+                </option>
+              ))}
             </select>
 
             <button
@@ -432,7 +428,6 @@ export default function ReportDetailsPage() {
             >
               {t("assign")}
             </button>
-
             {report?.status === "resolved" && (
               <div className="flex items-center gap-2 mt-3.5 text-xs text-amber-700 font-semibold leading-snug animate-fadeIn">
                 <FaExclamationTriangle className="text-amber-500 text-xs shrink-0" />
@@ -440,7 +435,6 @@ export default function ReportDetailsPage() {
               </div>
             )}
           </div>
-
           {/* Assigned Technical Info */}
           {assignedWorkerInfo && (
             <div className="rounded-2xl glass-card-strong p-5 hover-lift">
@@ -450,7 +444,7 @@ export default function ReportDetailsPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-sm font-bold flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="h-10 w-10 rounded-full bg-linear-to-br from-emerald-500 to-emerald-600 text-white text-sm font-bold flex items-center justify-center shrink-0 shadow-sm">
                     {(assignedWorkerInfo.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -644,7 +638,7 @@ export default function ReportDetailsPage() {
           ) : report.afterImage ? (
             <button
               onClick={finishReport}
-              className="w-full bg-gradient-to-r from-primary to-emerald-600 hover:from-primary-hover hover:to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
+              className="w-full bg-linear-to-r from-primary to-emerald-600 hover:from-primary-hover hover:to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
             >
               <FaCheckCircle className="group-hover:scale-110 transition-transform" />
               {t("finish_report")}
@@ -669,21 +663,13 @@ export default function ReportDetailsPage() {
 
       {/* Image Lightbox */}
       {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/85 flex items-center justify-center z-[9999] animate-overlayIn"
-          onClick={() => setSelectedImage(null)}
-        >
-          <img
-            src={selectedImage}
-            alt="preview"
-            className="max-w-[90%] max-h-[85vh] rounded-2xl shadow-2xl animate-scaleIn"
-            onClick={(e) => e.stopPropagation()}
-          />
-
+        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-9999 animate-overlayIn" onClick={() => setSelectedImage(null)}>
+          <img src={selectedImage} alt="preview"
+          className="max-w-[90%] max-h-[85vh] rounded-2xl shadow-2xl animate-scaleIn" onClick={(e) => e.stopPropagation()}/>
           <button
             onClick={() => setSelectedImage(null)}
-            className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all backdrop-blur-sm"
-          >
+            className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 flex 
+            items-center justify-center text-white transition-all backdrop-blur-sm">
             <FaTimes />
           </button>
         </div>

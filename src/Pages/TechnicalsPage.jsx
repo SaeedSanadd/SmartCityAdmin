@@ -26,31 +26,9 @@ export default function TechnicalsPage() {
     const [status, setStatus] = useState("All");
     const [workers, setWorkers] = useState([]);
 
-    const [inspectingWorker, setInspectingWorker] = useState(null);
-    const [selectedWorkerTasks, setSelectedWorkerTasks] = useState([]);
-    const [loadingTasks, setLoadingTasks] = useState(false);
     const [showPass, setShowPass] = useState(false);
 
-    async function inspectWorkerTasks(worker) {
-        setInspectingWorker(worker);
-        setLoadingTasks(true);
-        setSelectedWorkerTasks([]);
-        try {
-            const q = query(
-                collection(db, "reports"),
-                where("assignedTo", "==", worker.id)
-            );
-            const snap = await getDocs(q);
-            const tasks = snap.docs
-                .map((d) => ({ id: d.id, ...d.data() }))
-                .filter((t) => t.status !== "resolved");
-            setSelectedWorkerTasks(tasks);
-        } catch (err) {
-            console.error("Failed to fetch worker tasks:", err);
-        } finally {
-            setLoadingTasks(false);
-        }
-    }
+
 
     useEffect(() => {
         const qRef = query(
@@ -255,8 +233,7 @@ export default function TechnicalsPage() {
                     <div className="col-span-4 text-start">{t("worker")}</div>
                     <div className="col-span-3 text-start">{t("contact")}</div>
                     <div className="col-span-2 text-start">{t("status")}</div>
-                    <div className="col-span-1 text-start">{t("tasks")}</div>
-                    <div className="col-span-1 text-start">{t("area")}</div>
+                    <div className="col-span-2 text-start">{t("area")}</div>
                     <div className="col-span-1 text-end">{t("action")}</div>
                 </div>
 
@@ -269,8 +246,7 @@ export default function TechnicalsPage() {
                     filtered.map((w, idx) => (
                         <div
                             key={w.id}
-                            onClick={() => inspectWorkerTasks(w)}
-                            className="grid grid-cols-12 px-5 py-4 items-center table-row-hover animate-fadeIn cursor-pointer"
+                            className="grid grid-cols-12 px-5 py-4 items-center animate-fadeIn"
                             style={{ animationDelay: `${Math.min(idx * 40, 320)}ms` }}
                         >
                             <div className="col-span-4 flex items-center gap-3">
@@ -293,11 +269,7 @@ export default function TechnicalsPage() {
                                 </Badge>
                             </div>
 
-                            <div className="col-span-1">
-                                <span className="text-sm font-bold text-slate-800">{w.tasks}</span>
-                            </div>
-
-                            <div className="col-span-1">
+                            <div className="col-span-2">
                                 <p className="text-sm text-slate-600 truncate">{w.area}</p>
                             </div>
 
@@ -462,80 +434,6 @@ export default function TechnicalsPage() {
                 </div>
             )}
 
-            {/* Inspect Modal */}
-            {inspectingWorker && (
-                <div
-                    className="fixed inset-0 z-[99999] bg-slate-900/40 flex items-center justify-center p-4 animate-overlayIn"
-                    onClick={() => setInspectingWorker(null)}
-                >
-                    <div
-                        className="w-full max-w-lg rounded-2xl glass-card-strong shadow-2xl p-6 sm:p-8 relative animate-modalIn"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Close */}
-                        <button
-                            onClick={() => setInspectingWorker(null)}
-                            className="absolute top-4 end-4 text-slate-400 hover:text-slate-600 text-lg transition cursor-pointer"
-                        >
-                            ✕
-                        </button>
-
-                        {/* Header */}
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
-                                {(inspectingWorker.name || "?").charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900">
-                                    {inspectingWorker.name}
-                                </h2>
-                                <p className="text-xs text-slate-400">
-                                    {t("active_assigned_tasks") || "Active Assigned Tasks"} ({selectedWorkerTasks.length})
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* List of Tasks */}
-                        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                            {loadingTasks ? (
-                                <div className="flex flex-col items-center justify-center py-12 gap-2">
-                                    <div className="spinner !border-primary/30 !border-t-primary" />
-                                    <p className="text-xs text-slate-400">{t("loading")}</p>
-                                </div>
-                            ) : selectedWorkerTasks.length === 0 ? (
-                                <div className="text-center py-12 text-slate-400 text-xs font-medium">
-                                    {t("no_active_tasks") || "No active tasks assigned."}
-                                </div>
-                            ) : (
-                                selectedWorkerTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition flex items-center justify-between gap-4"
-                                    >
-                                        <div className="min-w-0 flex-1 text-start">
-                                            <p className="font-bold text-slate-800 text-sm truncate">
-                                                {task.type}
-                                            </p>
-                                            <p className="text-xs text-slate-500 mt-1 truncate">
-                                                📍 {task.city} • {task.address}
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                setInspectingWorker(null);
-                                                navigate(`/reports/${task.id}`);
-                                            }}
-                                            className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary-hover text-xs font-bold transition shrink-0 cursor-pointer"
-                                        >
-                                            {t("back_to_reports") || "View"} →
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

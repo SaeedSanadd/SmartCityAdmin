@@ -1,45 +1,21 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import {doc,getDoc,updateDoc,collection,getDocs,query,where,} from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import BinsMap from "../Components/BinsMap";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import Badge from "../Components/Badge";
-import {
-  FaArrowLeft,
-  FaMapMarkerAlt,
-  FaCheckCircle,
-  FaClock,
-  FaExclamationCircle,
-  FaUserCog,
-  FaIdBadge,
-  FaCalendarAlt,
-  FaPhoneAlt,
-  FaExclamationTriangle,
-} from "react-icons/fa";
-
+import {FaArrowLeft,FaMapMarkerAlt,FaCheckCircle,FaExclamationCircle,FaIdBadge,FaCalendarAlt,FaPhoneAlt,FaExclamationTriangle,} from "react-icons/fa";
 export default function BinDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-
   const [bin, setBin] = useState(null);
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedWorker, setSelectedWorker] = useState("");
   const [assignedWorkerInfo, setAssignedWorkerInfo] = useState(null);
-
-
   // Calculate workload and area recommendations for workers
   const sortedWorkers = useMemo(() => {
     if (!bin || workers.length === 0) return [];
@@ -49,20 +25,17 @@ export default function BinDetailsPage() {
           w.area &&
           bin.locationName &&
           bin.locationName.toLowerCase().includes(w.area.toLowerCase().trim());
-
         const score = (matchesArea ? 100 : 0) - (w.tasks || 0) * 10;
         return { ...w, matchesArea, score };
       })
       .sort((a, b) => b.score - a.score);
   }, [workers, bin]);
-
   // Fetch the specific bin details
   useEffect(() => {
     async function fetchBin() {
       try {
         const docRef = doc(db, "Bins", id);
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
           const data = { id: docSnap.id, ...docSnap.data() };
           setBin(data);
@@ -76,7 +49,6 @@ export default function BinDetailsPage() {
     }
     fetchBin();
   }, [id]);
-
   // Fetch all technicians
   useEffect(() => {
     async function fetchWorkers() {
@@ -97,7 +69,6 @@ export default function BinDetailsPage() {
     }
     fetchWorkers();
   }, []);
-
   // Fetch assigned worker details when bin.assignedTo changes
   useEffect(() => {
     async function fetchAssignedWorker() {
@@ -132,11 +103,9 @@ export default function BinDetailsPage() {
     try {
       const prevWorkerId = bin.assignedTo;
       const binRef = doc(db, "Bins", id);
-
       await updateDoc(binRef, {
         assignedTo: selectedWorker,
       });
-
       // Decrement tasks count for previous worker if reassigned
       if (prevWorkerId && prevWorkerId !== selectedWorker) {
         const prevRef = doc(db, "users", prevWorkerId);
@@ -146,7 +115,6 @@ export default function BinDetailsPage() {
           await updateDoc(prevRef, { tasks: Math.max(0, currentTasks - 1) });
         }
       }
-
       // Increment tasks count for new worker
       if (!prevWorkerId || prevWorkerId !== selectedWorker) {
         const nextRef = doc(db, "users", selectedWorker);
@@ -156,7 +124,6 @@ export default function BinDetailsPage() {
           await updateDoc(nextRef, { tasks: currentTasks + 1 });
         }
       }
-
       toast.success(t("assign_success"));
       setBin((prev) => ({
         ...prev,
@@ -167,7 +134,6 @@ export default function BinDetailsPage() {
       toast.error(t("assign_fail"));
     }
   }
-
   // Clear technician assignment and mark bin as NORMAL (Emptied)
   async function markAsEmpty() {
     try {
@@ -176,7 +142,6 @@ export default function BinDetailsPage() {
         status: "NORMAL",
         assignedTo: "",
       });
-
       // Decrement technician tasks workload count
       if (bin.assignedTo) {
         const workerRef = doc(db, "users", bin.assignedTo);
@@ -186,7 +151,6 @@ export default function BinDetailsPage() {
           await updateDoc(workerRef, { tasks: Math.max(0, currentTasks - 1) });
         }
       }
-
       toast.success(t("finish_success"));
       setBin((prev) => ({
         ...prev,
@@ -199,27 +163,23 @@ export default function BinDetailsPage() {
       toast.error(t("status_fail"));
     }
   }
-
   const getStatusBadgeTone = (status) => {
     return status === "FULL" ? "danger" : "success";
   };
-
   const getStatusLabel = (status) => {
     if (status === "FULL") return t("full");
     return t("normal");
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="spinner !border-primary/30 !border-t-primary !w-8 !h-8" />
+          <div className="spinner border-primary/30! border-t-primary! w-8! h-8!" />
           <p className="text-sm text-slate-400">{t("loading")}</p>
         </div>
       </div>
     );
   }
-
   if (!bin) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -232,23 +192,18 @@ export default function BinDetailsPage() {
       </div>
     );
   }
-
   return (
     <div className="space-y-6 animate-fadeInUp">
       {/* Header Card */}
       <div className="rounded-2xl glass-card-strong overflow-hidden">
-        <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-primary to-emerald-600" />
-
+        <div className="h-1.5 w-full bg-linear-to-r from-emerald-500 via-primary to-emerald-600" />
         <div className="p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-start gap-4">
-              <button
-                onClick={() => navigate("/bins-reports")}
-                className="h-10 w-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shrink-0 cursor-pointer"
-              >
+              <button onClick={() => navigate("/reports")}
+              className="h-10 w-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shrink-0 cursor-pointer">
                 <FaArrowLeft className="text-sm" />
               </button>
-
               <div>
                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">
                   {bin.binId}
@@ -259,7 +214,6 @@ export default function BinDetailsPage() {
                 </div>
               </div>
             </div>
-
             <div className="flex items-center gap-2 shrink-0">
               <Badge tone={getStatusBadgeTone(bin.status)}>
                 {getStatusLabel(bin.status)}
@@ -268,7 +222,6 @@ export default function BinDetailsPage() {
           </div>
         </div>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="space-y-5">
@@ -298,46 +251,31 @@ export default function BinDetailsPage() {
               </div>
             </div>
           </div>
-
           {/* Assign Worker */}
           <div className="rounded-2xl glass-card-strong p-5 hover-lift">
             <h3 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
               <span className="text-blue-500 text-lg leading-none">•</span>
               <span>{t("assign_worker")}</span>
             </h3>
-
             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               {t("select_worker")}
             </label>
 
-            <select
-              disabled={bin.status !== "FULL"}
-              value={selectedWorker}
-              onChange={(e) => setSelectedWorker(e.target.value)}
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <select disabled={bin.status !== "FULL"} value={selectedWorker} onChange={(e) => setSelectedWorker(e.target.value)}
+            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               <option value="">{t("unassigned")}</option>
-              {sortedWorkers.map((w) => {
-                const workloadStr = `(${w.tasks || 0} ${t("active_tasks")})`;
-                const recommendation = w.matchesArea
-                  ? ` | 📍 ${t("recommended")}`
-                  : "";
-                return (
-                  <option key={w.id} value={w.id}>
-                    {w.name || w.email} {workloadStr} {recommendation}
-                  </option>
-                );
-              })}
+              {sortedWorkers.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name || w.email}
+                </option>
+              ))}
             </select>
-
             <button
               disabled={bin.status !== "FULL"}
               onClick={assignWorker}
-              className="mt-3.5 w-full bg-primary hover:bg-primary-hover text-white py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              className="mt-3.5 w-full bg-primary hover:bg-primary-hover text-white py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               {t("assign")}
             </button>
-
             {bin.status !== "FULL" && (
               <div className="flex items-center gap-2 mt-3.5 text-xs text-amber-700 font-semibold leading-snug">
                 <FaExclamationTriangle className="text-amber-500 text-xs shrink-0" />
@@ -345,7 +283,6 @@ export default function BinDetailsPage() {
               </div>
             )}
           </div>
-
           {/* Assigned Technician Info */}
           {assignedWorkerInfo && (
             <div className="rounded-2xl glass-card-strong p-5 hover-lift">
@@ -355,7 +292,7 @@ export default function BinDetailsPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-sm font-bold flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="h-10 w-10 rounded-full bg-linear-to-br from-emerald-500 to-emerald-600 text-white text-sm font-bold flex items-center justify-center shrink-0 shadow-sm">
                     {(assignedWorkerInfo.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -391,14 +328,12 @@ export default function BinDetailsPage() {
             </div>
           )}
         </div>
-
         {/* Right Column */}
         <div className="lg:col-span-2 space-y-5">
           {/* Leaflet Map with Single Bin Pin */}
           <div className="rounded-2xl glass-card-strong overflow-hidden hover-lift h-80 sm:h-96">
             <BinsMap bins={[bin]} />
           </div>
-
           {/* Action Resolution / Alert Display */}
           {bin.status === "FULL" ? (
             <div className="space-y-4">
@@ -415,12 +350,10 @@ export default function BinDetailsPage() {
                   </p>
                 </div>
               </div>
-
               {/* Action Button: Manually Emptied */}
               <button
                 onClick={markAsEmpty}
-                className="w-full bg-gradient-to-r from-primary to-emerald-600 hover:from-primary-hover hover:to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer"
-              >
+                className="w-full bg-linear-to-r from-primary to-emerald-600 hover:from-primary-hover hover:to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer">
                 <FaCheckCircle className="group-hover:scale-110 transition-transform" />
                 Mark as Emptied
               </button>

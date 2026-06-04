@@ -5,7 +5,6 @@ const tones = {
   warn: "bg-amber-50 text-amber-700 border-amber-200/60",
   neutral: "bg-slate-50 text-slate-600 border-slate-200/60",
 };
-
 // eslint-disable-next-line react-refresh/only-export-components
 export const statusTone = (status) => {
   switch (status?.toLowerCase()) {
@@ -19,7 +18,6 @@ export const statusTone = (status) => {
       return "neutral";
   }
 };
-
 export default function Badge({ children, tone = "neutral" }) {
   return (
     <span
