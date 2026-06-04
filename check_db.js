@@ -25,7 +25,7 @@ async function run() {
   console.log(`Found ${binsSnapshot.size} bins total.`);
   binsSnapshot.forEach((doc) => {
     const data = doc.data();
-    console.log(`- ID: ${doc.id}, Status: "${data.status}", latitude: ${data.latitude}, longitude: ${data.longitude}, assignedTo: ${data.assignedTo}`);
+    console.log(`- ID: ${doc.id}, keys: ${Object.keys(data).join(", ")}, reportDate: "${data.reportDate}", reportTime: "${data.reportTime}"`);
   });
   process.exit(0);
 }

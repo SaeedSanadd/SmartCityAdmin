@@ -155,5 +155,7 @@
     "location_coords": "الإحداثيات",
     "assigned_technical": "الفني المعين",
     "citizen_reports": "بلاغات المواطنين",
-    "assign_only_full": "يمكن تعيين الفنيين للحاويات الممتلئة فقط."
+    "assign_only_full": "يمكن تعيين الفنيين للحاويات الممتلئة فقط.",
+    "newest_first": "الأحدث أولاً",
+    "oldest_first": "الأقدم أولاً"
 }

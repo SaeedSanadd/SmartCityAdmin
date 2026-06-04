@@ -15,6 +15,7 @@ export default function ReportsPage() {
     const [reports, setReports] = useState([]);
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("All");
+    const [sortOrder, setSortOrder] = useState("newest"); // 'newest' or 'oldest'
 
     const exportToCSV = () => {
         if (filtered.length === 0) return;
@@ -58,7 +59,7 @@ export default function ReportsPage() {
     }, []);
 
     const filtered = useMemo(() => {
-        return reports.filter((r) => {
+        const result = reports.filter((r) => {
             const matchQ =
                 q.trim() === "" ||
                 `${r.type ?? ""} ${r.city ?? ""} ${r.address ?? ""} ${r.notes ?? ""}`
@@ -67,7 +68,13 @@ export default function ReportsPage() {
             const matchStatus = status === "All" ? true : r.status === status;
             return matchQ && matchStatus;
         });
-    }, [reports, q, status]);
+
+        return result.sort((a, b) => {
+            const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime()) : 0;
+            const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime()) : 0;
+            return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+        });
+    }, [reports, q, status, sortOrder]);
 
     const formatDate = (timestamp) => {
         if (!timestamp) return "";
@@ -152,7 +159,7 @@ export default function ReportsPage() {
                                     <button
                                         key={f.key}
                                         onClick={() => setStatus(f.key)}
-                                        className={`px-3 py-2 text-xs font-medium transition-all duration-200
+                                        className={`px-3 py-2 text-xs font-medium transition-all duration-200 cursor-pointer
                                             ${status === f.key
                                                 ? "bg-primary text-white shadow-sm"
                                                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
@@ -162,6 +169,16 @@ export default function ReportsPage() {
                                     </button>
                                 ))}
                             </div>
+
+                            {/* Sort select */}
+                            <select
+                                value={sortOrder}
+                                onChange={(e) => setSortOrder(e.target.value)}
+                                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-slate-600 font-medium cursor-pointer"
+                            >
+                                <option value="newest">{t("newest_first")}</option>
+                                <option value="oldest">{t("oldest_first")}</option>
+                            </select>
                         </div>
                     </div>
 

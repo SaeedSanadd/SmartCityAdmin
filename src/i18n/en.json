@@ -155,5 +155,7 @@
     "location_coords": "Coordinates",
     "assigned_technical": "Assigned Technician",
     "citizen_reports": "Citizen Reports",
-    "assign_only_full": "Technicians can only be assigned to FULL bins."
+    "assign_only_full": "Technicians can only be assigned to FULL bins.",
+    "newest_first": "Newest First",
+    "oldest_first": "Oldest First"
 }

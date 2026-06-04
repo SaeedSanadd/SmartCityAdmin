@@ -25,6 +25,7 @@ export default function BinsReportsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("All");
   const [viewMode, setViewMode] = useState("table"); // 'table' or 'map'
+  const [sortOrder, setSortOrder] = useState("newest"); // 'newest' or 'oldest'
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Bins"), (snapshot) => {
@@ -78,7 +79,7 @@ export default function BinsReportsPage() {
   }, [bins, t]);
 
   const filtered = useMemo(() => {
-    return bins.filter((b) => {
+    const result = bins.filter((b) => {
       const matchQ =
         q.trim() === "" ||
         `${b.binId ?? ""} ${b.locationName ?? ""}`
@@ -94,7 +95,20 @@ export default function BinsReportsPage() {
 
       return matchQ && matchStatus;
     });
-  }, [bins, q, status]);
+
+    return result.sort((a, b) => {
+      const getMs = (item) => {
+        if (!item.reportDate) return 0;
+        const timeStr = item.reportTime || "12:00 AM";
+        const d = new Date(`${item.reportDate} ${timeStr}`);
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+      };
+      const msA = getMs(a);
+      const msB = getMs(b);
+
+      return sortOrder === "newest" ? msB - msA : msA - msB;
+    });
+  }, [bins, q, status, sortOrder]);
 
   const getStatusBadgeTone = (status) => {
     return status === "FULL" ? "danger" : "success";
@@ -206,6 +220,16 @@ export default function BinsReportsPage() {
               </button>
             ))}
           </div>
+
+          {/* Sort select */}
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-slate-600 font-medium cursor-pointer"
+          >
+            <option value="newest">{t("newest_first")}</option>
+            <option value="oldest">{t("oldest_first")}</option>
+          </select>
 
           {/* View Mode Toggle */}
           <div className="flex rounded-xl border border-slate-200/80 overflow-hidden bg-slate-50/50 p-0.5">
