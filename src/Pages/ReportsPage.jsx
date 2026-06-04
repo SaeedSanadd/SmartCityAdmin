@@ -1,10 +1,12 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { useTranslation } from "react-i18next";
 import { FaSearch, FaChevronRight, FaInbox, FaDownload } from "react-icons/fa";
-import Badge, { statusTone } from "../Components/Badge";
+import Badge from "../Components/Badge";
+import { statusTone } from "../utils/statusUtils";
 import BinsReportsPage from "./BinsReportsPage";
 
 export default function ReportsPage() {
@@ -59,21 +61,21 @@ export default function ReportsPage() {
     }, []);
 
     const filtered = useMemo(() => {
-        const result = reports.filter((r) => {
-            const matchQ =
-                q.trim() === "" ||
-                `${r.type ?? ""} ${r.city ?? ""} ${r.address ?? ""} ${r.notes ?? ""}`
-                    .toLowerCase()
-                    .includes(q.toLowerCase());
-            const matchStatus = status === "All" ? true : r.status === status;
-            return matchQ && matchStatus;
-        });
-
-        return result.sort((a, b) => {
-            const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime()) : 0;
-            const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime()) : 0;
-            return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-        });
+        return reports
+            .filter((r) => {
+                const matchQ =
+                    q.trim() === "" ||
+                    `${r.type ?? ""} ${r.city ?? ""} ${r.address ?? ""} ${r.notes ?? ""}`
+                        .toLowerCase()
+                        .includes(q.toLowerCase());
+                const matchStatus = status === "All" ? true : r.status === status;
+                return matchQ && matchStatus;
+            })
+            .sort((a, b) => {
+                const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime()) : 0;
+                const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime()) : 0;
+                return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+            });
     }, [reports, q, status, sortOrder]);
 
     const formatDate = (timestamp) => {

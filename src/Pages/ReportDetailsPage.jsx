@@ -84,7 +84,6 @@ export default function ReportDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   const [selectedWorker, setSelectedWorker] = useState("");
-  const [status, setStatus] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [assignedWorkerInfo, setAssignedWorkerInfo] = useState(null);
 
@@ -110,6 +109,10 @@ export default function ReportDetailsPage() {
       return report.history;
     }
     
+    const createdTime = report.createdAt?.seconds 
+      ? report.createdAt.seconds * 1000 
+      : report.createdAt ? new Date(report.createdAt).getTime() : 0;
+
     const events = [];
     if (report.createdAt) {
       events.push({
@@ -121,9 +124,6 @@ export default function ReportDetailsPage() {
       });
     }
     if (report.assignedTo) {
-      const createdTime = report.createdAt?.seconds 
-        ? report.createdAt.seconds * 1000 
-        : new Date(report.createdAt || Date.now()).getTime();
       events.push({
         action: "assigned",
         timestamp: new Date(createdTime + 60000).toISOString(),
@@ -134,7 +134,7 @@ export default function ReportDetailsPage() {
     if (report.status === "resolved") {
       events.push({
         action: "resolved",
-        timestamp: new Date().toISOString(),
+        timestamp: report.resolvedAt || (createdTime ? new Date(createdTime + 120000).toISOString() : new Date("2026-06-04").toISOString()),
         actor: "Admin"
       });
     }
@@ -149,7 +149,6 @@ export default function ReportDetailsPage() {
       if (docSnap.exists()) {
         const data = { id: docSnap.id, ...docSnap.data() };
         setReport(data);
-        setStatus(data.status);
         setSelectedWorker(data.assignedTo || "");
       }
       setLoading(false);
@@ -256,7 +255,6 @@ export default function ReportDetailsPage() {
         status: "in_progress",
         history: updatedHistory
       });
-      setStatus("in_progress");
     } catch (error) {
       console.error(error);
       toast.error(t("assign_fail"));
@@ -310,23 +308,13 @@ export default function ReportDetailsPage() {
         iconTheme: { primary: "#fff", secondary: "#10b981" },
       });
       setReport({ ...report, status: "resolved", resolvedAt, history: updatedHistory });
-      setStatus("resolved");
     } catch (error) {
       console.error(error);
       toast.error(t("finish_fail"));
     }
   }
 
-  async function updateStatus() {
-    try {
-      await updateDoc(doc(db, "reports", id), { status });
-      toast.success(t("status_updated"));
-      setReport({ ...report, status });
-    } catch (error) {
-      console.error(error);
-      toast.error(t("status_fail"));
-    }
-  }
+
 
   if (loading)
     return (

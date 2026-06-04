@@ -24,14 +24,13 @@ import {
   FaIdBadge,
   FaCalendarAlt,
   FaPhoneAlt,
-  FaRuler,
   FaExclamationTriangle,
 } from "react-icons/fa";
 
 export default function BinDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const [bin, setBin] = useState(null);
   const [workers, setWorkers] = useState([]);
@@ -40,7 +39,6 @@ export default function BinDetailsPage() {
   const [selectedWorker, setSelectedWorker] = useState("");
   const [assignedWorkerInfo, setAssignedWorkerInfo] = useState(null);
 
-  const isRtl = i18n.language === "ar";
 
   // Calculate workload and area recommendations for workers
   const sortedWorkers = useMemo(() => {
@@ -283,25 +281,15 @@ export default function BinDetailsPage() {
             <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400 font-medium">
-                  {t("distance")}
+                  {t("location_name")}
                 </span>
-                <span className="text-slate-800 font-bold flex items-center gap-1">
-                  <FaRuler className="text-slate-400 text-xs" />
-                  {Number(bin.distance).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400 font-medium">
-                  {t("location_coords")}
-                </span>
-                <span className="text-slate-700 font-mono text-xs">
-                  {Number(bin.latitude).toFixed(4)},{" "}
-                  {Number(bin.longitude).toFixed(4)}
+                <span className="text-slate-700 font-medium text-xs">
+                  {bin.locationName}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400 font-medium">
-                  {t("location_time")}
+                  {t("report_date_time")}
                 </span>
                 <span className="text-slate-700 text-xs flex items-center gap-1.5">
                   <FaCalendarAlt className="text-[10px] text-slate-400" />

@@ -54,7 +54,7 @@ export default function AnalyticsCharts({ reports, bins }) {
   // Donut Math
   const radius = 50;
   const circumference = 2 * Math.PI * radius; // ~314.16
-  let accumulatedPercent = 0;
+
 
   // 2. Weekly Trend Data Processing (Last 7 Days)
   const weeklyData = useMemo(() => {
@@ -136,8 +136,10 @@ export default function AnalyticsCharts({ reports, bins }) {
                   const strokeDashoffset =
                     circumference - (circumference * percent) / 100;
                   const strokeDasharray = `${circumference} ${circumference}`;
-                  const rotation = (accumulatedPercent / 100) * 360;
-                  accumulatedPercent += percent;
+                  const currentAccumulated = categoryData
+                    .slice(0, idx)
+                    .reduce((sum, it) => sum + (it.count / totalCategoriesCount) * 100, 0);
+                  const rotation = (currentAccumulated / 100) * 360;
 
                   return (
                     <circle

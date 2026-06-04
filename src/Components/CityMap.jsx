@@ -218,15 +218,7 @@ export default function CityMap({ reports, bins }) {
                         </Badge>
                       </div>
 
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-slate-400">📏</span>
-                        <span className="text-slate-600">
-                          <span className="font-semibold text-slate-700">
-                            {t("distance")}:
-                          </span>{" "}
-                          {Number(b.distance).toFixed(2)}
-                        </span>
-                      </div>
+
                     </div>
 
                     <div className="border-t border-slate-100 my-3" />

@@ -16,9 +16,4 @@ export default function Badge({ children, tone = "neutral" }) {
   );
 }
 
-export function statusTone(status) {
-  if (status === "resolved") return "success";
-  if (status === "in_progress") return "info";
-  return "danger";
-}
 

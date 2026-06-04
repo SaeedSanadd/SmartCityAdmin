@@ -112,7 +112,7 @@ export default function Sidebar({ logout }) {
           <button
             onClick={handleLogout}
             className="group flex items-center gap-3 rounded-xl px-3 py-2.5 w-full
-                            bg-white/[0.03] border border-emerald-500/[0.06]
+                            bg-white/[0.03] border border-emerald-500/6
                             hover:bg-red-500/10 hover:border-red-500/20
                             transition-all duration-250"
           >

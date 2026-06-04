@@ -20,11 +20,7 @@ export default function SettingsPage() {
     const [showConfirmPass, setShowConfirmPass] = useState(false);
     const isRtl = i18n.language === "ar";
 
-    useEffect(() => {
-        if (admin) {
-            setEditedName(admin.name || "");
-        }
-    }, [admin]);
+
 
     async function handleUpdateProfile() {
         if (!editedName.trim()) {
@@ -64,7 +60,9 @@ export default function SettingsPage() {
                 const ref = doc(db, "admins", user.uid);
                 const snap = await getDoc(ref);
                 if (snap.exists()) {
-                    setAdmin(snap.data());
+                    const data = snap.data();
+                    setAdmin(data);
+                    setEditedName(data.name || "");
                 }
             } catch (error) {
                 console.error(error);

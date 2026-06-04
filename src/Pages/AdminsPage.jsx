@@ -4,8 +4,9 @@ import {
     onSnapshot,
     deleteDoc,
     doc,
+    setDoc,
 } from "firebase/firestore";
-import { db, auth, firebaseConfig } from "../firebase/firebase";
+import { db, firebaseConfig } from "../firebase/firebase";
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useTranslation } from "react-i18next";

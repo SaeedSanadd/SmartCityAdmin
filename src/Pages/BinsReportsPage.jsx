@@ -11,7 +11,6 @@ import {
   FaTrash,
   FaExclamationTriangle,
   FaCheckCircle,
-  FaRuler,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Badge from "../Components/Badge";
@@ -20,7 +19,7 @@ import BinsMap from "../Components/BinsMap";
 
 export default function BinsReportsPage() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [bins, setBins] = useState([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("All");
@@ -43,13 +42,6 @@ export default function BinsReportsPage() {
     const full = bins.filter((b) => b.status === "FULL").length;
     const normal = bins.filter((b) => b.status !== "FULL").length;
 
-    // Average distance calculation
-    const totalDistance = bins.reduce(
-      (sum, b) => sum + (Number(b.distance) || 0),
-      0
-    );
-    const avgDistance = total > 0 ? (totalDistance / total).toFixed(2) : "0.00";
-
     return [
       {
         title: t("total_bins"),
@@ -68,12 +60,6 @@ export default function BinsReportsPage() {
         value: normal,
         icon: <FaCheckCircle />,
         bgClass: "bg-green-50 text-green-600 border-green-200/60",
-      },
-      {
-        title: t("average_distance"),
-        value: avgDistance,
-        icon: <FaRuler />,
-        bgClass: "bg-blue-50 text-blue-600 border-blue-200/60",
       },
     ];
   }, [bins, t]);
@@ -125,7 +111,6 @@ export default function BinsReportsPage() {
       "Bin ID",
       "Location Name",
       "Status",
-      "Distance",
       "Latitude",
       "Longitude",
       "Report Date",
@@ -138,7 +123,6 @@ export default function BinsReportsPage() {
           `"${(b.binId || "").replace(/"/g, '""')}"`,
           `"${(b.locationName || "").replace(/"/g, '""')}"`,
           `"${(b.status || "").replace(/"/g, '""')}"`,
-          Number(b.distance || 0).toFixed(4),
           Number(b.latitude || 0).toFixed(6),
           Number(b.longitude || 0).toFixed(6),
           `"${(b.reportDate || "").replace(/"/g, '""')}"`,
@@ -260,7 +244,7 @@ export default function BinsReportsPage() {
       </div>
 
       {/* KPI Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {kpis.map((stat, idx) => (
           <div key={idx} className={`animate-fadeInUp stagger-${idx + 1}`}>
             <StatCard {...stat} />
@@ -275,8 +259,7 @@ export default function BinsReportsPage() {
             {/* Table Header */}
             <div className="grid grid-cols-12 border-b border-slate-100/80 bg-slate-50/60 px-5 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               <div className="col-span-2 text-start">{t("bin_id")}</div>
-              <div className="col-span-4 text-start">{t("location_name")}</div>
-              <div className="col-span-2 text-start">{t("distance")}</div>
+              <div className="col-span-6 text-start">{t("location_name")}</div>
               <div className="col-span-2 text-start">{t("bin_status")}</div>
               <div className="col-span-2 text-start">{t("location_time")}</div>
             </div>
@@ -310,7 +293,7 @@ export default function BinsReportsPage() {
                     </span>
                   </div>
 
-                  <div className="col-span-4 min-w-0 pr-2">
+                  <div className="col-span-6 min-w-0 pr-2">
                     <p className="text-sm font-medium text-slate-800 truncate">
                       {b.locationName}
                     </p>
@@ -318,12 +301,6 @@ export default function BinsReportsPage() {
                       {Number(b.latitude).toFixed(4)},{" "}
                       {Number(b.longitude).toFixed(4)}
                     </p>
-                  </div>
-
-                  <div className="col-span-2">
-                    <span className="text-sm text-slate-700 font-semibold tabular-nums">
-                      {Number(b.distance).toFixed(2)}
-                    </span>
                   </div>
 
                   <div className="col-span-2">
