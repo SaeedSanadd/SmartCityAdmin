@@ -13,7 +13,7 @@ import { db } from "../firebase/firebase";
 import CityMap from "../Components/CityMap";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import Badge, { statusTone, priorityTone } from "../Components/Badge";
+import Badge, { statusTone } from "../Components/Badge";
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
@@ -27,6 +27,7 @@ import {
   FaIdBadge,
   FaCalendarAlt,
   FaPhoneAlt,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 
 const statusSteps = ["pending", "in_progress", "resolved"];
@@ -192,6 +193,10 @@ export default function ReportDetailsPage() {
   }, [report?.assignedTo]);
 
   async function assignWorker() {
+    if (report?.status === "resolved") {
+      toast.error(t("cannot_assign_resolved"));
+      return;
+    }
     if (!selectedWorker) {
       toast.error(t("select_worker_error"));
       return;
@@ -261,9 +266,10 @@ export default function ReportDetailsPage() {
   async function finishReport() {
     try {
       const reportRef = doc(db, "reports", id);
+      const resolvedAt = new Date().toISOString();
       const logEntry = {
         action: "resolved",
-        timestamp: new Date().toISOString(),
+        timestamp: resolvedAt,
         actor: "Admin"
       };
 
@@ -280,6 +286,7 @@ export default function ReportDetailsPage() {
 
       await updateDoc(reportRef, {
         status: "resolved",
+        resolvedAt,
         history: updatedHistory
       });
 
@@ -292,8 +299,17 @@ export default function ReportDetailsPage() {
         }
       }
 
-      toast.success(t("finish_success"));
-      setReport({ ...report, status: "resolved", history: updatedHistory });
+      toast.success(t("finish_success"), {
+        duration: 4000,
+        style: {
+          background: "#10b981",
+          color: "#fff",
+          fontWeight: "600",
+          borderRadius: "12px",
+        },
+        iconTheme: { primary: "#fff", secondary: "#10b981" },
+      });
+      setReport({ ...report, status: "resolved", resolvedAt, history: updatedHistory });
       setStatus("resolved");
     } catch (error) {
       console.error(error);
@@ -365,11 +381,6 @@ export default function ReportDetailsPage() {
 
             <div className="flex items-center gap-2 shrink-0">
               <Badge tone={statusTone(report.status)}>{report.status}</Badge>
-              {report.priority && (
-                <Badge tone={priorityTone(report.priority)}>
-                  {report.priority}
-                </Badge>
-              )}
             </div>
           </div>
 
@@ -400,8 +411,8 @@ export default function ReportDetailsPage() {
           {/* Assign Worker */}
           <div className="rounded-2xl glass-card-strong p-5 hover-lift">
             <h3 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-              {t("assign_worker")}
+              <span className="text-blue-500 text-lg leading-none">•</span>
+              <span>{t("assign_worker")}</span>
             </h3>
 
             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -411,7 +422,8 @@ export default function ReportDetailsPage() {
             <select
               value={selectedWorker}
               onChange={(e) => setSelectedWorker(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer"
+              disabled={report?.status === "resolved"}
+              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">{t("unassigned")}</option>
               {sortedWorkers.map((w) => {
@@ -427,10 +439,18 @@ export default function ReportDetailsPage() {
 
             <button
               onClick={assignWorker}
-              className="mt-3 w-full bg-primary hover:bg-primary-hover text-white py-2.5 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all text-sm"
+              disabled={report?.status === "resolved"}
+              className="mt-3.5 w-full bg-primary hover:bg-primary-hover text-white py-3 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t("assign")}
             </button>
+
+            {report?.status === "resolved" && (
+              <div className="flex items-center gap-2 mt-3.5 text-xs text-amber-700 font-semibold leading-snug animate-fadeIn">
+                <FaExclamationTriangle className="text-amber-500 text-xs shrink-0" />
+                <span>{t("cannot_assign_resolved")}</span>
+              </div>
+            )}
           </div>
 
           {/* Assigned Technical Info */}
@@ -617,7 +637,23 @@ export default function ReportDetailsPage() {
           )}
 
           {/* Finish / Waiting */}
-          {report.afterImage ? (
+          {report.status === "resolved" ? (
+            <div className="p-4 rounded-xl border border-emerald-200/70 bg-emerald-50/60 text-emerald-800 text-sm flex items-center gap-3 shadow-sm">
+              <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                <FaCheckCircle className="text-emerald-600 text-lg" />
+              </div>
+              <div>
+                <p className="font-semibold text-emerald-900 text-sm">
+                  {t("action_resolved")}
+                </p>
+                {report.resolvedAt && (
+                  <p className="text-xs text-emerald-600 mt-0.5">
+                    {new Date(report.resolvedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : report.afterImage ? (
             <button
               onClick={finishReport}
               className="w-full bg-gradient-to-r from-primary to-emerald-600 hover:from-primary-hover hover:to-emerald-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
